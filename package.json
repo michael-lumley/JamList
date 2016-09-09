@@ -1,0 +1,48 @@
+{
+  "name": "JamList",
+  "version": "0.0.0",
+  "description": "JamList Music Database: Tag, track and organized your music and subscriptions with metadata you control.",
+  "main": "server/server.js",
+  "scripts": {
+    "pretest": "jshint ."
+  },
+  "author": "Michael Lumley",
+  "license": "MIT",
+  "dependencies": {
+    "Polymer": "^1.5.2",
+    "compression": "^1.0.3",
+    "errorhandler": "^1.1.1",
+    "jquery": "^3.1.0",
+    "js-cookie": "^2.1.2",
+    "loopback": "^2.8.0",
+    "loopback-boot": "^2.4.0",
+    "loopback-connector-mysql": "^2.3.0",
+    "loopback-datasource-juggler": "^2.7.0",
+    "npm-polymer-elements": "0.0.1",
+    "querystring": "^0.2.0",
+    "serve-favicon": "^2.0.1",
+    "underscore": "^1.8.3",
+    "webcomponentsjs": "^1.0.2"
+  },
+  "optionalDependencies": {
+    "loopback-explorer": "^1.1.0"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "coffee-script": "^1.10.0",
+    "coffeeify": "^2.0.1",
+    "event-stream": "^3.3.4",
+    "glob": "^7.0.6",
+    "gulp": "^3.9.1",
+    "gulp-coffee": "^2.3.2",
+    "gulp-rename": "^1.2.2",
+    "jshint": "^2.5.6",
+    "polybuild": "^1.1.0",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "browserify": {
+    "transform": [
+      "coffeeify"
+    ]
+  }
+}

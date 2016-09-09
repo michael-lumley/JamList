@@ -1,0 +1,33 @@
+{
+  "name": "track",
+  "plural": "tracks",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "properties": {
+    "artist": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "album": {
+      "type": "string"
+    },
+    "durationSec": {
+      "type": "number"
+    },
+    "googleId": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "libraryEntries": {
+      "type": "hasMany",
+      "model": "libraryEntry",
+      "foreignKey": ""
+    }
+  },
+  "acls": [],
+  "methods": []
+}

@@ -1,0 +1,27 @@
+{
+  "name": "tag",
+  "plural": "tags",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "libraryEntries": {
+      "type": "hasAndBelongsToMany",
+      "model": "libraryEntry",
+      "foreignKey": ""
+    },
+    "jlUser": {
+      "type": "belongsTo",
+      "model": "jlUser",
+      "foreignKey": ""
+    }
+  },
+  "acls": [],
+  "methods": []
+}

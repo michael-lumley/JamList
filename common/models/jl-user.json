@@ -1,0 +1,43 @@
+{
+  "name": "jlUser",
+  "plural": "jlUsers",
+  "base": "User",
+  "idInjection": true,
+  "properties": {
+    "username": {
+      "type": "string",
+      "id": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "playlists": {
+      "type": "hasMany",
+      "model": "playlist",
+      "foreignKey": ""
+    },
+    "rules": {
+      "type": "hasMany",
+      "model": "rule",
+      "foreignKey": ""
+    },
+    "tags": {
+      "type": "hasMany",
+      "model": "tag",
+      "foreignKey": ""
+    },
+    "libraryEntries": {
+      "type": "hasMany",
+      "model": "libraryEntry",
+      "foreignKey": ""
+    }
+  },
+  "acls": [
+    {
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    }
+  ],
+  "methods": []
+}

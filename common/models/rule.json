@@ -1,0 +1,57 @@
+{
+  "name": "rule",
+  "plural": "rules",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "properties": {
+    "group": {
+      "type": "number",
+      "required": true
+    },
+    "has": {
+      "type": "number",
+      "required": true
+    },
+    "hasNot": {
+      "type": "number",
+      "required": true
+    },
+    "played": {
+      "type": "number",
+      "required": true
+    },
+    "dated": {
+      "type": "number",
+      "required": true
+    },
+    "rated": {
+      "type": "number",
+      "dataType": "float",
+      "precision": 2,
+      "scale": 1
+    },
+    "greater": {
+      "type": "number"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "playlist": {
+      "type": "belongsTo",
+      "model": "playlist",
+      "foreignKey": ""
+    },
+    "tag": {
+      "type": "belongsTo",
+      "model": "tag",
+      "foreignKey": ""
+    },
+    "jlUser": {
+      "type": "belongsTo",
+      "model": "jlUser",
+      "foreignKey": ""
+    }
+  },
+  "acls": [],
+  "methods": []
+}

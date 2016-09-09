@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "sources": [
+      "loopback/common/models",
+      "loopback/server/models",
+      "../common/models",
+      "./models"
+    ]
+  },
+  "User": {
+    "dataSource": "db"
+  },
+  "AccessToken": {
+    "dataSource": "db",
+    "public": false
+  },
+  "ACL": {
+    "dataSource": "db",
+    "public": false
+  },
+  "RoleMapping": {
+    "dataSource": "db",
+    "public": false
+  },
+  "Role": {
+    "dataSource": "db",
+    "public": false
+  },
+  "libraryEntry": {
+    "dataSource": "sql",
+    "public": true
+  },
+  "tag": {
+    "dataSource": "sql",
+    "public": true
+  },
+  "playlist": {
+    "dataSource": "sql",
+    "public": true
+  },
+  "rule": {
+    "dataSource": "sql",
+    "public": true
+  },
+  "jlUser": {
+    "dataSource": "sql",
+    "public": true
+  },
+  "track": {
+    "dataSource": "sql",
+    "public": true
+  }
+}

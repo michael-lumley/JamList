@@ -1,0 +1,39 @@
+{
+  "name": "playlist",
+  "plural": "playlists",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "properties": {
+    "id": {
+      "type": "string",
+      "id": true
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "serviceId": {
+      "type": "string"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "rules": {
+      "type": "hasMany",
+      "model": "rule",
+      "foreignKey": ""
+    },
+    "libraryEntries": {
+      "type": "hasAndBelongsToMany",
+      "model": "libraryEntry",
+      "foreignKey": ""
+    },
+    "jlUser": {
+      "type": "belongsTo",
+      "model": "jlUser",
+      "foreignKey": ""
+    }
+  },
+  "acls": [],
+  "methods": []
+}

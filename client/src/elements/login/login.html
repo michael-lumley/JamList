@@ -1,0 +1,25 @@
+<!-- Defines element markup -->
+<dom-module id="da-login">
+  <style>
+    .greenButton {
+      background-color: var(--paper-green-500);
+      color: white;
+    }
+  </style>
+  <template>
+    <paper-material elevation="1" style="width: 300px">
+      <paper-item class="layout center"><h1>Jam List Music Database</h1></paper-item>
+      <paper-item class="layout" style="padding: 0px">
+        <paper-input label="Username" value="{{username}}" style="width: 100%"></paper-input>
+      </paper-item>
+      <paper-item class="layout" style="padding: 0px">
+        <paper-input label="Password" value="{{password}}" type="password" style="width: 100%"></paper-input>
+      </paper-item>
+      <paper-item class="layout center end-justified" style="padding:10px">
+        <paper-button class="greenButton" on-click="login">Login</paper-button>
+      </paper-item>
+    </paper-material>
+  </template>
+
+  <script src="login.js"></script>
+</dom-module>

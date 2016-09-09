@@ -1,0 +1,57 @@
+{
+  "name": "libraryEntry",
+  "plural": "libraryEntries",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "properties": {
+    "playCount": {
+      "type": "number"
+    },
+    "sortDate": {
+      "type": "number"
+    },
+    "rating": {
+      "type": "number",
+      "dataType": "float",
+      "precision": 2,
+      "scale": 1
+    },
+    "recentTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    },
+    "lastModifiedTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    },
+    "creationTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    }
+  },
+  "validations": [],
+  "relations": {
+    "tags": {
+      "type": "hasAndBelongsToMany",
+      "model": "tag",
+      "foreignKey": ""
+    },
+    "playlists": {
+      "type": "hasAndBelongsToMany",
+      "model": "playlist",
+      "foreignKey": ""
+    },
+    "jlUser": {
+      "type": "belongsTo",
+      "model": "jlUser",
+      "foreignKey": ""
+    },
+    "track": {
+      "type": "belongsTo",
+      "model": "track",
+      "foreignKey": ""
+    }
+  },
+  "acls": [],
+  "methods": []
+}
