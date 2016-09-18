@@ -1,4 +1,4 @@
-window.elements = {} if !window.daElements?
+window.elements = {} if !window.elements?
 console.log "login element"
 window.elements.login = Polymer(
   is: 'da-login',
@@ -11,4 +11,3 @@ window.elements.login = Polymer(
   created: ()-> console.log "created login"
   ready: ()-> console.log "ready login"
 )
- 

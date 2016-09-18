@@ -35,7 +35,9 @@
     "glob": "^7.0.6",
     "gulp": "^3.9.1",
     "gulp-coffee": "^2.3.2",
+    "gulp-crisper": "^1.1.0",
     "gulp-rename": "^1.2.2",
+    "gulp-vulcanize": "^6.1.0",
     "jshint": "^2.5.6",
     "polybuild": "^1.1.0",
     "vinyl-source-stream": "^1.1.0"

@@ -8,13 +8,15 @@ polybuild = require('polybuild')
 coffee = require('gulp-coffee')
 
 gulp.task('devBuild', (done)->
-  gulp.watch("client/src/deps.html", (e)=>
+  gulp.watch("client/src/html/deps.html", (e)=>
+    console.log "building #{e.path}..."
     gulp.src(e.path)
-      .pipe(polybuild())
+      .pipe(polybuild({clean: false}))
       .pipe(gulp.dest('client/src'))
   )
 
   gulp.watch("client/src/coffee/*.coffee", (e)=>
+    console.log "building #{e.path}..."
     return browserify(e.path)
       .bundle()
       .pipe(source(e.path))
@@ -26,6 +28,7 @@ gulp.task('devBuild', (done)->
   )
 
   gulp.watch("client/src/app.coffee", (e)=>
+    console.log "building #{e.path}..."
     return browserify(e.path)
       .bundle()
       .pipe(source(e.path))
@@ -37,18 +40,18 @@ gulp.task('devBuild', (done)->
   )
 
   gulp.watch("common/models/*.coffee", (e)=>
+    console.log "building #{e.path}..."
     gulp.src('common/models/*.coffee')
       .pipe(coffee({bare: true}))
       .pipe(gulp.dest('common/models'))
   )
 
   gulp.watch("client/src/elements/**/*.coffee", (e)=>
-    console.log e.path
+    console.log "building #{e.path}..."
     return browserify(e.path)
       .bundle()
       .pipe(source(e.path))
       .pipe(rename((path)->
-        console.log path
         path.dirname += ""
         path.extname = ".js"
       ))
