@@ -61,9 +61,41 @@ window.elements.app = Polymer(
     console.log("ready")
   attached: ()->                  # Page JS Setup, Plugin Listener Creation
     console.log "attached"
+    @routerSetup()
     if !app.tokens[app.user.email]?
-      app.displayLogin()
+      @setRoute("login")
   # !fold
+
+  #Router @fold
+  router: ()->
+    url = location.hash.slice(1) || '/';
+    console.log url
+    console.log @routes
+    console.log url.substr(1)
+    console.log @routes[url.substr(1)]?
+    if @routes[url.substr(1)]?
+      console.log "calling #{url.substr(1)}"
+      @routes[url.substr(1)].bind(@)()
+  routerSetup: ()->
+    @routes = {
+      "login": ()->
+        console.log "login route"
+        console.log @
+        console.log @display
+        @display.login.bind(@)()
+      "tracks": ()->
+        console.log "track route"
+        console.log @
+        console.log @display
+        @display.trackList.bind(@)()
+    }
+    window.addEventListener('hashchange', @router.bind(@))
+    window.addEventListener('load', @router.bind(@))
+    console.log @routes
+    @router()
+  setRoute: (route)->
+    window.location.hash = "#/" + route;
+
 
   #Data Access Functions @fold
   getUser: ()->
@@ -321,7 +353,8 @@ window.elements.app = Polymer(
       ).then((data)=>
         @syncFromService()
       ).then((data)=>
-        @displayTrackList()
+        console.log "done with sync"
+        @setRoute("tracks")
         @hideSpinner()
       )
     )
@@ -334,14 +367,28 @@ window.elements.app = Polymer(
   # !fold
 
   #Main Display Functions @fold
-  displayLogin: ()->
-    console.log "display login func"
-    login = new elements.login()
-    @$.display.appendChild(login)
-  displayTrackList: ()->
-    console.log "display trackList"
-    trackList = new elements.trackList()
-    @$.display.appendChild(trackList)
+  display:
+    prelim: ()->
+      console.trace()
+      console.log "display prelim"
+      console.log @
+      while @$.display.firstChild?
+        @$.display.removeChild(@$.display.firstChild)
+    login: (firstArg)->
+      console.log firstArg
+      console.log @
+      @display.prelim.bind(@)()
+      console.log "display login func"
+      login = new elements.login()
+      console.log @properties
+      console.log @$
+      @$.display.appendChild(login)
+    trackList: ()->
+      console.log @
+      @display.prelim.bind(@)()
+      console.log "display trackList"
+      trackList = new elements.trackList()
+      @$.display.appendChild(trackList)
   # !fold
 
   #Aux Display Functions

@@ -1,4 +1,5 @@
 console.log "Advanced Database Running"
+console.log "test"
 
 # This is the code we will inject into the site to retrieve user data
 codeToInject = ()->
@@ -10,7 +11,7 @@ codeToInject = ()->
       email: window.USER_CONTEXT[12]
       tier: window.USER_CONTEXT[13]
       xt: window._GU_getCookie('xt')
-    , 'https://play.google.com') 
+    , 'https://play.google.com')
 
 # Injects the passed function into the document, runs it, then removes it
 injectFunc = (func)->
@@ -43,6 +44,8 @@ getTracks = ()->
 
 #Listener for the retrieved user information
 window.addEventListener('message', (event)=>
+  console.log "message back from window"
+  console.log event
   if event.origin == "https://play.google.com"
     window.user = event.data
     console.log event.data
@@ -73,5 +76,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>
 
 console.log "injecting"
 injectFunc(codeToInject)
-
-console.log window.user

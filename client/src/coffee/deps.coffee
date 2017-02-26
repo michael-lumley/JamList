@@ -1,7 +1,9 @@
+console.log("js deps module")
 
-Cookies = require("../../node_modules/js-cookie")
-_ = require("../../node_modules/underscore")
-$ = require("../../node_modules/jquery")
+window.Cookies = require("../../../node_modules/js-cookie")
+window._ = require("../../../node_modules/underscore")
+window.$ = require("../../../node_modules/jquery")
+window.page = require("../../../bower_components/page/page.js")
 
 # Utility Functions @fold
 String.prototype.toDash = () ->
@@ -181,3 +183,4 @@ _.toClipboard = (text)->
     document.body.removeChild(textArea);
     return 'Oops, unable to copy'
 # !fold
+ 

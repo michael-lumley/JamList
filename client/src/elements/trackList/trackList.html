@@ -1,6 +1,6 @@
 <script src="../listElem/listElem.js"></script>
 
-<dom-module id="da-case-list">
+<dom-module id="track-list">
   <style>
     /* @fold */
     .bar {
@@ -56,8 +56,8 @@
   </style>
 
   <template>
+    <!--
     <paper-item class="bar horizontal layout end-justified">
-      {{cases.length}} Cases, {{tickingCount}} Cases on the Clock
       <paper-item>
         <paper-button class="pinkButton" raised icon="add" on-click="addCases">Add Case</paper-button>
       </paper-item>
@@ -72,103 +72,16 @@
         </paper-menu>
       </paper-dropdown-menu>
     </paper-item>
-
-    <paper-datatable custom-row-style="{{generateRowCss}}" data="{{localData}}" id="datatableList" style="width: 100%" >
-      <paper-datatable-column class="testStyle" header="Color" property="color/nextOn" sort="sortByColor/sortByDate" sortable>
-        <template>
-          <div class$="colorSwatch {{item.color}}"></div>
-        </template>
-      </paper-datatable-column>
-      <paper-datatable-column class="testStyle" header="Docket" property="docketNumber" editable sortable sort="sortByDefault">
-        <template>
-          <a href="javascript:;">{{value}}</a>
-        </template>
-      </paper-datatable-column>
-      <paper-datatable-column header="Defendant" property="defendantLast" sort="sortByDefault" sortable>
-        <template>
-          <span>{{item.defendantLast}}</span>, <span>{{item.defendantFirst}}</span>
-        </template>
-      </paper-datatable-column>
-      <paper-datatable-column id="nextOn" sort-direction="desc" header="Next On" property="nextOn/defendantLast" sortable sort="sortByDate/sortByDefault" sorted>
-        <template>{{item.nextOn}}</template>
-      </paper-datatable-column>
-      <paper-datatable-column header="For" property="onFor/nextOn" sortable sort="sortByEventType/sortByDate">
-        <template>{{item.onFor}}</template>
-      </paper-datatable-column>
-      <paper-datatable-column header="30.30 left" property="thirtyThirty" sortable sort="sortBy3030">
-        <template>{{item.thirtyThirty}}</template>
-      </paper-datatable-column>
-      <paper-datatable-column header="30.30 (next date)" property="thirtyThirtyNextDate" sortable sort="sortBy3030">
-        <template>{{item.thirtyThirtyNextDate}}</template>
-      </paper-datatable-column>
-      <paper-datatable-column header="">
-        <template>
-          <paper-icon-button icon="icons:shop" style="padding-left: 2px; padding-right: 2px" mini eid="{{item.id}}" onclick="this.fire('_generateDWIVideoRequest')"></paper-icon-button>
-          <paper-icon-button icon="icons:bookmark" style="padding-left: 2px; padding-right: 2px" mini eid="{{item.id}}" onclick="this.fire('_generateLabel')"></paper-icon-button>
-          <paper-icon-button icon="icons:assignment" style="padding-left: 2px; padding-right: 2px" mini eid="{{item.id}}" onclick="this.fire('_generateNote')"></paper-icon-button>
-          <paper-icon-button icon="icons:delete" style="padding-left: 2px; padding-right: 2px" mini eid="{{item.id}}" onclick="this.fire('_deleteConfirm')"></paper-icon-button>
-        </template>
-      </paper-datatable-column>
-    </paper-datatable>
-    <paper-dialog id="confirmDelete">
-      <h2>Confirm Deletion</h2>
-      <p>Are you sure you want to delete {{activeCase.defendantLast}}, {{activeCase.defendantFirst}}?</p>
-      <paper-item class="bar horizontal layout end-justified">
-        <paper-button class="pinkButton" on-click="_deleteAllScheduled">Yes</paper-button>
-        <paper-button dialog-dismiss>No</paper-button>
-      </paper-item>
-    </paper-dialog>
-    <paper-dialog id="auditCaseUpload">
-      <h2>Audit vs. Case Search</h2>
-      <p style="-webkit-margin-after: 0px">Copy and paste the output from DANY Case Search 'Find Open Cases by ADA' below.</p>
-      <paper-textarea maxRows="5" style="margin-top: 0px; max-height: 300px; max-width: 500px; overflow: hidden" label="DANY Case Search Output" value="{{audit}}"></paper-textarea>
-      <paper-item class="bar horizontal layout end-justified">
-        <paper-button class="pinkButton" on-click="auditCases">Run Audit</paper-button>
-        <paper-button dialog-dismiss>Cancel</paper-button>
-      </paper-item>
-    </paper-dialog>
-    <paper-dialog id="auditCaseReview">
-      <div id="results" style="max-height: 900px; overflow: scroll">
-        <div id="syncAdd">
-          <h2>Add Cases</h2>
-          <a href="javascript:void(0);" on-click="_auditAddAllNew">Select All</a>
-          <template is="dom-repeat" items="{{newAuditCases}}" as="item">
-            <div class="horizontal layout center" style="padding-bottom: 0.5em">
-              <div><paper-checkbox checked="{{item.sync}}" style="margin: 0px"></paper-checkbox></div>
-              <div class="flex">
-                <b>{{item.defendantLast}}, {{item.defendantFirst}}</b> ({{item.docketNumber}})
-              </div>
-            </div>
-          </template>
-        </div>
-        <!--<h2 style="margin-top:1em">Audit Results - Sync Cases</h2>
-        <template is="dom-repeat" items="{{syncAuditCases}}" as="item">
-          <div class="horizontal layout center" style="padding-bottom: 0.5em">
-            <div><paper-checkbox checked="{{item.sync}}" style="margin: 0px"></paper-checkbox></div>
-            <div class="flex center">
-              {{item.db.defendantLast}}, {{item.db.defendantFirst}} ({{item.db.docketNumber}}) - Next On: {{item.db.nextOn}} for {{item.db.onFor}}<br>
-              will be updated to <br>
-              {{item.dcs.defendantLast}}, {{item.dcs.defendantFirst}} ({{item.dcs.docketNumber}}) - Next On: {{item.dcs.nextOn}}
-            </div>
-          </div>
-        </template>
-        <h2 style="margin-top:1em">Audit Results - Delete Cases</h2>
-        <template is="dom-repeat" items="{{deleteAuditCases}}" as="item">
-          <div class="horizontal layout center" style="padding-bottom: 0.5em">
-            <div><paper-checkbox checked="{{item.sync}}" style="margin: 0px"></paper-checkbox></div>
-            <div class="flex">
-              <b>{{item.defendantLast}}, {{item.defendantFirst}}</b> ({{item.docketNumber}})<br>
-              Next On: {{item.nextOn}} for {{item.onFor}}
-            </div>
-          </div>
-        </template>
-      </div>-->
-      <paper-item class="bar horizontal layout end-justified">
-        <paper-button class="pinkButton" on-click="finishAudit">Finalize Changes</paper-button>
-        <paper-button dialog-dismiss>Cancel</paper-button>
-      </paper-item>
-    </paper-dialog>
+    -->
+    <vaadin-grid id="vaadin-grid">
+      <table>
+        <colgroup>
+          <col sortable resizable name="track.title">
+          <col sortable resizable name="track.artist">
+          <col sortable resizable name="playCount" sort="desc">
+        </colgroup>
+      </table>
+    </vaadin-grid>
   </template>
-</template>
 
 <script src="trackList.js"></script>

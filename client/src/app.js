@@ -76,9 +76,45 @@ window.elements.app = Polymer({
   },
   attached: function() {
     console.log("attached");
+    this.routerSetup();
     if (app.tokens[app.user.email] == null) {
-      return app.displayLogin();
+      return this.setRoute("login");
     }
+  },
+  router: function() {
+    var url;
+    url = location.hash.slice(1) || '/';
+    console.log(url);
+    console.log(this.routes);
+    console.log(url.substr(1));
+    console.log(this.routes[url.substr(1)] != null);
+    if (this.routes[url.substr(1)] != null) {
+      console.log("calling " + (url.substr(1)));
+      return this.routes[url.substr(1)].bind(this)();
+    }
+  },
+  routerSetup: function() {
+    this.routes = {
+      "login": function() {
+        console.log("login route");
+        console.log(this);
+        console.log(this.display);
+        return this.display.login.bind(this)();
+      },
+      "tracks": function() {
+        console.log("track route");
+        console.log(this);
+        console.log(this.display);
+        return this.display.trackList.bind(this)();
+      }
+    };
+    window.addEventListener('hashchange', this.router.bind(this));
+    window.addEventListener('load', this.router.bind(this));
+    console.log(this.routes);
+    return this.router();
+  },
+  setRoute: function(route) {
+    return window.location.hash = "#/" + route;
   },
   getUser: function() {
     return new Promise((function(_this) {
@@ -436,7 +472,8 @@ window.elements.app = Polymer({
         }).then(function(data) {
           return _this.syncFromService();
         }).then(function(data) {
-          _this.displayTrackList();
+          console.log("done with sync");
+          _this.setRoute("tracks");
           return _this.hideSpinner();
         });
       };
@@ -452,17 +489,37 @@ window.elements.app = Polymer({
       return page("/login");
     });
   },
-  displayLogin: function() {
-    var login;
-    console.log("display login func");
-    login = new elements.login();
-    return this.$.display.appendChild(login);
-  },
-  displayTrackList: function() {
-    var trackList;
-    console.log("display trackList");
-    trackList = new elements.trackList();
-    return this.$.display.appendChild(trackList);
+  display: {
+    prelim: function() {
+      var results;
+      console.trace();
+      console.log("display prelim");
+      console.log(this);
+      results = [];
+      while (this.$.display.firstChild != null) {
+        results.push(this.$.display.removeChild(this.$.display.firstChild));
+      }
+      return results;
+    },
+    login: function(firstArg) {
+      var login;
+      console.log(firstArg);
+      console.log(this);
+      this.display.prelim.bind(this)();
+      console.log("display login func");
+      login = new elements.login();
+      console.log(this.properties);
+      console.log(this.$);
+      return this.$.display.appendChild(login);
+    },
+    trackList: function() {
+      var trackList;
+      console.log(this);
+      this.display.prelim.bind(this)();
+      console.log("display trackList");
+      trackList = new elements.trackList();
+      return this.$.display.appendChild(trackList);
+    }
   },
   displaySpinner: function() {
     this.$["spinner-dialog"].open();

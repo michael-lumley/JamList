@@ -31,5 +31,9 @@
     "identity.email",
     "storage"
   ],
-  "short_name": "AdvancedDatabase"
+  "short_name": "AdvancedDatabase",
+  "web_accessible_resourrces": [
+    "bower_components/vaadin-grid/img/arrow-up.png",
+    "bower_components/vaadin-grid/img/arrow-dowwn.png"
+  ]
 }

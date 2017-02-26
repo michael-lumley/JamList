@@ -1,4 +1,4 @@
-window.daElements.listElem = {
+window.elements.listElem = {
   # Polymer properties @fold-children
   properties:
     localData:
@@ -11,10 +11,8 @@ window.daElements.listElem = {
     activeFilterId:
       type: Number
       value: null
-      observer: 'filter'
+      #observer: 'filter'
       notify: true
-    user:
-      type: String
   listeners:
     'cell-tap': 'cellTap'
   cellListeners:
@@ -23,11 +21,21 @@ window.daElements.listElem = {
 
   # Lifecycle @fold
   ready: ()->
+    console.log "listelem ready"
     app.patchDatatable(@$.datatableList, @)
+    console.log @dataPath
+    console.log app
+    console.log app.libraryEntries
+    console.log app[@dataPath]
+    @localData = app[@dataPath]
+    console.log @localData
   refresh: ()->
     @$.datatableList.data=[]
     @filter()
     @$.datatableList.data = @localData
+  attached: ()->
+    console.log "attached"
+    console.log trace()
   filter: ()->
     if @activeFilterId != null
       filter = @filters[@activeFilterId]

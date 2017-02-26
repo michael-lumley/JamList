@@ -3,6 +3,8 @@ var codeToInject, getTracks, injectFunc;
 
 console.log("Advanced Database Running");
 
+console.log("test");
+
 codeToInject = function() {
   console.log("injected code");
   console.log(window.USER_CONTEXT);
@@ -59,6 +61,8 @@ getTracks = function() {
 window.addEventListener('message', (function(_this) {
   return function(event) {
     var message;
+    console.log("message back from window");
+    console.log(event);
     if (event.origin === "https://play.google.com") {
       window.user = event.data;
       console.log(event.data);
@@ -91,8 +95,6 @@ chrome.runtime.onMessage.addListener((function(_this) {
 console.log("injecting");
 
 injectFunc(codeToInject);
-
-console.log(window.user);
 
 
 },{}]},{},[1]);
