@@ -187,7 +187,7 @@ window.elements.app = Polymer(
 				url: "http://localhost:3000/api/jlUsers/#{@user.jamlist.username}/libraryEntries"
 				data:
 					filter:
-						include: ['track', 'tags']
+						include: ['track', 'tags'] 
 			)
 			playlists = @xhr(
 				method: "GET"
