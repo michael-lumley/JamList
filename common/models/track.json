@@ -13,12 +13,15 @@
     "album": {
       "type": "string"
     },
-    "durationSec": {
+    "millisduration": {
       "type": "number"
     },
     "googleId": {
       "type": "string"
-    }
+    },
+		"trackNo": {
+			"type": "number"
+		}
   },
   "validations": [],
   "relations": {

@@ -1,7 +1,8 @@
 (function() {
   module.exports = function(app) {
     console.log("booting");
-    app.refresh = false;
+    app.refresh = true;
+    console.log(app.refresh);
     if (app.refresh) {
       console.log("refreshing app");
       return app.dataSources.sql.automigrate(function(err) {

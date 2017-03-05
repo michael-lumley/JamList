@@ -1,0 +1,51 @@
+{
+  "manifest_version": 2,
+  "name": "JamList",
+  "version": "0.0.1",
+    "description": "JamList Music Database: Tag, track and organized your music and subscriptions with metadata you control.",
+  "icons": {
+    "64": "resources/icon-64.png",
+    "128": "resources/icon-128.png"
+  },
+  "page_action": {
+    "default_popup": "src/html/index.html",
+    "default_title": "JamList Music Database"
+  },
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://play.google.com/music/listen*"],
+      "js": ["built/google_music.js"],
+      "run_at": "document_idle"
+    },
+		{
+			"matches": ["http://localhost/JL*"],
+			"js": ["built/application.js"]
+		}
+  ],
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz+3KtzjQDL02ImMyyYME023b6e+X/QzknISyl5BR3fAZRRqwj1am8BqOahuaDU7cnInozDZBCg16OoNLsMySA+tW8TYQ/y5d9MJl7AoJARm77td0A5M4gWD17cf2Y4DPo5SrksISIsUf66c1QXJAvm4ADNGJ7iXe/Uz4kpUSxx9L0ZbLq/2jwdoZ5riqzEg8J5WiWYGozUtMedrZON6azr/lhlmqlXbeNknn4K43xu3dCP2mvnWBIg5D97+BnGHcwygATq8qcGbPz0NFpT2JKHFafKYjKcxqwn3zRnYZQxqpZ8vPgjd2yudekLnqH88wYUhJHXgVIe8i5mjcSzHqgQIDAQAB",
+	"oauth2": {
+			"client_id": "2926246410-1fv6eah3tgqu44f1hmol91cih06brpth.apps.googleusercontent.com",
+			"scopes": [
+					"https://www.googleapis.com/auth/chromewebstore.readonly",
+					"https://www.googleapis.com/auth/skyjam"
+			]
+	},
+  "permissions": [
+    "*://play.google.com/music/*",
+    "https://www.googleapis.com/",
+    "https://www.google-analytics.com/",
+    "notifications",
+    "identity",
+    "identity.email",
+    "storage"
+  ],
+  "short_name": "AdvancedDatabase",
+  "web_accessible_resourrces": [
+    "bower_components/vaadin-grid/img/arrow-up.png",
+    "bower_components/vaadin-grid/img/arrow-down.png"
+  ]
+}
