@@ -6,22 +6,32 @@
   window.elements.app = Polymer({
     is: "jamlist-app",
     properties: {
+      libraryEntries: {
+        type: Array
+      },
       playerActive: {
         type: Boolean,
         value: false
+      },
+      playlists: {
+        type: Array
+      },
+      queue: {
+        type: Object,
+        value: {}
       },
       serviceActive: {
         type: Boolean,
         value: false
       },
-      libraryEntries: {
-        type: Array
-      },
-      playlists: {
-        type: Array
-      },
       tags: {
         type: Array
+      },
+      tokens: {
+        type: Array
+      },
+      urlBase: {
+        type: "string"
       },
       user: {
         type: Object,
@@ -29,15 +39,10 @@
         value: function() {
           return {
             google: {},
-            jamlist: {}
+            jamlist: {},
+            deferred: $.Deferred()
           };
         }
-      },
-      urlBase: {
-        type: "string"
-      },
-      tokens: {
-        type: Array
       }
     },
     listeners: {
@@ -51,9 +56,7 @@
           }
           glogger("last").add(args);
           if (typeof app !== "undefined" && app !== null) {
-            console.log(app);
             if (app.__data__ != null) {
-              console.log(app.__data__);
               args.user = app.user.google;
             }
           }
@@ -62,18 +65,18 @@
       })(this)
     }),
     created: function() {
-      console.log("creating app");
       window.app = this;
       this.urlBase = "localhost";
       this.tokens = [];
-      console.log("sending message");
       return this.portal.sendMessage({
         target: "google_music",
         fn: "userInfo",
         args: {}
       }).then((function(_this) {
         return function(response) {
-          return _this.user.google = response.user;
+          console.log(response);
+          _this.user.google = response.user;
+          return _this.user.deferred.resolve();
         };
       })(this));
     },
@@ -82,55 +85,194 @@
     },
     attached: function() {
       console.log("attached");
-      this.routerSetup();
-      if (app.tokens[app.user.email] == null) {
-        return this.setRoute("login");
-      }
+      return this.routerSetup();
+    },
+    login: function(username, password) {
+      this.display.spinner();
+      return this.xhr({
+        method: "POST",
+        url: "http://" + this.urlBase + ":3000/api/JLUsers/login",
+        data: {
+          username: username,
+          password: password
+        }
+      }).then((function(_this) {
+        return function(data) {
+          Cookies.set("token", data.id);
+          Cookies.set("user", data.userId);
+          _this.setRoute("tracks");
+          return _this.display.hideSpinner();
+        };
+      })(this));
+    },
+    logout: function() {
+      return this.xhr({
+        method: "POST",
+        url: "http://" + this.urlBase + ":3000/api/DAUsers/login"
+      }).then(function(response, xhr) {
+        Cookies.remove("token");
+        Cookies.remove("user");
+        return page("/login");
+      });
     },
     router: function() {
-      var url;
+      var route, url;
       url = location.hash.slice(1) || '/';
-      if (this.routes[url.substr(1)] != null) {
-        return this.routes[url.substr(1)].bind(this)();
-      }
+      return route = this.routes.prelim(url.substr(1)).then((function(_this) {
+        return function(route) {
+          if (route && (_this.routes[route] != null)) {
+            return _this.routes[route]();
+          }
+        };
+      })(this))["catch"]((function(_this) {
+        return function(error) {
+          return console.log(error);
+        };
+      })(this));
     },
     routerSetup: function() {
-      this.routes = {
-        "login": function() {
-          return this.display.login.bind(this)();
-        },
-        "tracks": function() {
-          return this.display.trackList.bind(this)();
-        }
-      };
       window.addEventListener('hashchange', this.router.bind(this));
-      window.addEventListener('load', this.router.bind(this));
       return this.router();
     },
     setRoute: function(route) {
       return window.location.hash = "#/" + route;
     },
-    upsert: function(type, data, where) {
+    routes: {
+      prelim: function(path) {
+        console.log(path);
+        while (app.$.display.firstChild != null) {
+          app.$.display.removeChild(app.$.display.firstChild);
+        }
+        return new Promise((function(_this) {
+          return function(resolve, reject) {
+            if (path === "/") {
+              app.setRoute("tracks");
+              reject();
+            }
+            if (path !== "login" && ((Cookies.get("user") == null) || (Cookies.get("token") == null))) {
+              app.setRoute("login");
+              return reject();
+            } else if (path !== "login" && ((app.playlists == null) || (app.tags == null) || (app.libraryEntries == null))) {
+              return app.loadJamListData().then(function() {
+                return resolve(path);
+              });
+            } else {
+              return resolve(path);
+            }
+          };
+        })(this));
+      },
+      login: function() {
+        var login;
+        login = new elements.login();
+        return app.$.display.appendChild(login);
+      },
+      tracks: function() {
+        var trackList;
+        trackList = new elements.trackList();
+        return app.$.display.appendChild(trackList);
+      },
+      sync: function() {
+        console.log("syncing");
+        return app.user.deferred.then((function(_this) {
+          return function() {
+            console.log("user resolved");
+            return app.syncWithService();
+          };
+        })(this));
+      },
+      test: function() {
+        var testElem;
+        testElem = new elements.playlist.detail(1);
+        return app.$.display.appendChild(testElem);
+      }
+    },
+    display: {
+      track: function(track) {
+        while (app.$["trackDisplay"].firstChild != null) {
+          app.$["trackDisplay"].removeChild(app.$["trackDisplay"].firstChild);
+        }
+        app.$["trackDisplay"].appendChild(new elements.libraryEntry.details(track.id));
+        return app.$["trackDisplay"].open();
+      },
+      spinner: function() {
+        app.$["spinner-dialog"].open();
+        return app.$.spinner.active = true;
+      },
+      hideSpinner: function() {
+        app.$["spinner-dialog"].close();
+        return app.$.spinner.active = false;
+      }
+    },
+    upsert: function(type, data, where, force) {
       if (data == null) {
         data = {};
       }
       if (where == null) {
         where = {};
       }
-      if (type !== "track") {
-        where.jlUser = this.user.jamlist.username;
-        data.jlUserId = this.user.jamlist.username;
+      if (force == null) {
+        force = false;
       }
-      return this.xhr({
-        method: "POST",
-        url: "http://" + this.urlBase + ":3000/api/" + (type.pluralize()) + "/upsertWithWhere",
-        data: data,
-        qs: {
-          where: where
-        }
-      });
+      return new Promise((function(_this) {
+        return function(resolve, reject) {
+          var libraryEntry, tag;
+          if (!force) {
+            if (type === "libraryEntry") {
+              libraryEntry = _.findWhere(_this.libraryEntries, where);
+              if (libraryEntry != null) {
+                console.log("skipped library entry");
+                resolve(libraryEntry);
+                return;
+              }
+            } else if (type === "tag") {
+              tag = _.findWhere(_this.tags, where);
+              if (tag != null) {
+                console.log("skipped tag");
+                resolve(tag);
+                return;
+              }
+            } else if (type === "track") {
+              libraryEntry = _.find(_this.libraryEntries, function(item) {
+                var property, value;
+                for (property in where) {
+                  value = where[property];
+                  if (item.track[property] !== value) {
+                    return false;
+                  } else {
+                    return true;
+                  }
+                }
+              });
+              if (libraryEntry != null) {
+                console.log("skipped track");
+                resolve(libraryEntry.track);
+                return;
+              }
+            }
+          }
+          if (type !== "track") {
+            where.jlUser = Cookies.get("user");
+            data.jlUserId = Cookies.get("user");
+          }
+          return _this.xhr({
+            method: "POST",
+            url: "http://" + _this.urlBase + ":3000/api/" + (type.pluralize()) + "/upsertWithWhere",
+            data: data,
+            qs: {
+              where: where
+            }
+          }).then(function(data) {
+            return resolve(data);
+          });
+        };
+      })(this));
     },
-    syncWithService: function() {
+    syncWithService: function(syncPlaylists) {
+      if (syncPlaylists == null) {
+        syncPlaylists = false;
+      }
+      console.log("syncWithService");
       return new Promise((function(_this) {
         return function(resolve, reject) {
           var playlists, tracks;
@@ -169,7 +311,7 @@
             }
             fn1 = function(playlist) {
               var globalTag;
-              if (key < 3) {
+              if (key < 999999) {
                 globalTag = {};
                 console.log(playlist);
                 return Promise.resolve().then(function() {
@@ -179,6 +321,7 @@
                     name: playlist.name
                   });
                 }).then(function(tag) {
+                  console.log(tag);
                   globalTag = tag;
                   return _this.portal.sendMessage({
                     target: "background",
@@ -189,17 +332,16 @@
                   });
                 }).then(function(playlistEntries) {
                   var k, len2, results;
-                  console.log(playlistEntries);
                   results = [];
                   for (key = k = 0, len2 = playlistEntries.length; k < len2; key = ++k) {
                     track = playlistEntries[key];
-                    console.log(track);
                     results.push(_this.upsert("track", track, {
                       title: track.title,
                       artist: track.artist,
                       millisduration: track.millisduration
                     }).then(function(track) {
                       var id;
+                      console.log(track);
                       id = track.id;
                       track.trackId = id;
                       delete track.id;
@@ -207,9 +349,10 @@
                         trackId: id
                       });
                     }).then(function(libraryEntry) {
+                      console.log(libraryEntry);
                       return _this.xhr({
                         type: "PUT",
-                        url: "http://localhost:3000/api/tags/" + globalTag.id + "/libraryEntries/rel/" + libraryEntry.id
+                        url: "http://" + _this.urlBase + ":3000/api/tags/" + globalTag.id + "/libraryEntries/rel/" + libraryEntry.id
                       });
                     }));
                   }
@@ -252,7 +395,7 @@
           var libraryEntries, playlists, tags;
           libraryEntries = _this.xhr({
             method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + _this.user.jamlist.username + "/libraryEntries",
+            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/libraryEntries",
             data: {
               filter: {
                 include: ['track', 'tags']
@@ -261,7 +404,7 @@
           });
           playlists = _this.xhr({
             method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + _this.user.jamlist.username + "/playlists",
+            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/playlists",
             data: {
               filter: {
                 include: {
@@ -272,7 +415,7 @@
           });
           tags = _this.xhr({
             method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + _this.user.jamlist.username + "/playlists"
+            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/tags"
           });
           return Promise.all([libraryEntries, playlists, tags]).then(function(data) {
             console.log(data);
@@ -285,7 +428,13 @@
       })(this));
     },
     get: function(type, id) {
+      console.log("GETTING");
+      console.log(id);
       id = +id;
+      console.log(type);
+      console.log(type.pluralize());
+      console.log(this[type.pluralize()]);
+      console.log(id);
       return _.find(this[type.pluralize()], function(instData) {
         return instData.id === id;
       });
@@ -300,6 +449,7 @@
     },
     setAttr: function(type, id, localProp, value) {
       var obj;
+      console.log(arguments);
       id = +id;
       obj = this.get(type, id);
       if (localProp !== 'id') {
@@ -362,17 +512,61 @@
         })(this));
       }
     },
+    addTag: function(libraryEntryId, tag) {
+      var tagData;
+      tagData = {};
+      return new Promise((function(_this) {
+        return function(resolve, reject) {
+          return _this.upsert("tag", {
+            name: tag
+          }, {
+            name: tag
+          }).then(function(tag) {
+            tagData = tag;
+            return _this.xhr({
+              method: "PUT",
+              url: "http://" + _this.urlBase + ":3000/api/libraryEntries/" + libraryEntryId + "/tags/rel/" + tagData.id
+            });
+          }).then(function(rel) {
+            var localData;
+            localData = app.get("libraryEntry", libraryEntryId);
+            return localData.tags.push(tagData);
+          });
+        };
+      })(this));
+    },
+    deleteTag: function(libraryEntryId, tag) {
+      return new Promise((function(_this) {
+        return function(resolve, reject) {
+          return _this.upsert("tag", {
+            name: tag
+          }, {
+            name: tag
+          }).then(function(tag) {
+            return _this.xhr({
+              method: "DELETE",
+              url: "http://" + _this.urlBase + ":3000/api/libraryEntries/" + libraryEntryId + "/tags/rel/" + tag.id
+            });
+          }).then(function(rel) {
+            var localData;
+            localData = app.get("libraryEntry", libraryEntryId);
+            return localData.tags = _.filter(localData.tags, function(tagData) {
+              return tagData.name !== tag;
+            });
+          });
+        };
+      })(this));
+    },
     load: function() {
       console.log("loading");
-      return this.displaySpinner();
+      return this.display.spinner();
     },
     queueData: function(type, id, localProp, value) {
-      var calcedVars;
-      calcedVars = {
-        "case": ["nextOn", "onFor", "thirtyThirty", "thirtyThirtyNextDate"]
-      };
       if (this.timeout != null) {
         window.clearTimeout(this.timeout);
+      }
+      if (this.queue[type.pluralize()] == null) {
+        this.queue[type.pluralize()] = {};
       }
       if (this.queue[type.pluralize()][id] == null) {
         this.queue[type.pluralize()][id] = {};
@@ -392,8 +586,8 @@
               for (id in type) {
                 data = type[id];
                 xhrs.push(this.xhr({
-                  method: "PUT",
-                  url: "http://" + this.urlBase + ":3000/api/" + (typeKey.frontCap()) + "/" + id,
+                  method: "PATCH",
+                  url: "http://" + this.urlBase + ":3000/api/" + typeKey + "/" + id,
                   data: this.queue[typeKey][id]
                 }));
                 results1.push(delete this.queue[typeKey][id]);
@@ -410,88 +604,20 @@
         settings.headers = {};
       }
       if (settings.qs != null) {
-        console.log(settings.qs);
-        console.log(JSON.stringify(settings.qs));
         settings.url = settings.url + "?" + $.param(settings.qs);
       }
       if (Cookies.get("token") != null) {
         settings.headers.Authorization = Cookies.get("token");
       }
+      settings.statusCode = {
+        401: (function(_this) {
+          return function() {
+            console.log("401 error");
+            return app.setRoute("login");
+          };
+        })(this)
+      };
       return $.ajax(settings);
-    },
-    login: function(username, password) {
-      this.user.jamlist.username = username;
-      this.displaySpinner();
-      return this.xhr({
-        method: "POST",
-        url: "http://" + this.urlBase + ":3000/api/JLUsers/login",
-        data: {
-          username: username,
-          password: password
-        }
-      }).then((function(_this) {
-        return function(data) {
-          console.log(data);
-
-          /*
-          			if data.xhr.status == 401
-          				@fail("Incorrect or unknown username/password!")
-          				return
-           */
-          Cookies.set("token", data.id);
-          Cookies.set("user", data.userId);
-          return _this.loadJamListData().then(function(data) {
-            console.log(_this.libraryEntries);
-            console.log(_this.playlists);
-            return _this.syncWithService();
-          }).then(function(data) {
-            _this.setRoute("tracks");
-            return _this.hideSpinner();
-          })["catch"](function(error) {
-            return console.log(error);
-          });
-        };
-      })(this));
-    },
-    logout: function() {
-      return this.xhr({
-        method: "POST",
-        url: "http://" + this.urlBase + ":3000/api/DAUsers/login"
-      }).then(function(response, xhr) {
-        Cookies.remove("token");
-        Cookies.remove("user");
-        return page("/login");
-      });
-    },
-    display: {
-      prelim: function() {
-        var results;
-        results = [];
-        while (this.$.display.firstChild != null) {
-          results.push(this.$.display.removeChild(this.$.display.firstChild));
-        }
-        return results;
-      },
-      login: function(firstArg) {
-        var login;
-        this.display.prelim.bind(this)();
-        login = new elements.login();
-        return this.$.display.appendChild(login);
-      },
-      trackList: function() {
-        var trackList;
-        this.display.prelim.bind(this)();
-        trackList = new elements.trackList();
-        return this.$.display.appendChild(trackList);
-      }
-    },
-    displaySpinner: function() {
-      this.$["spinner-dialog"].open();
-      return this.$.spinner.active = true;
-    },
-    hideSpinner: function() {
-      this.$["spinner-dialog"].close();
-      return this.$.spinner.active = false;
     },
 
     /* Confirm Dialog

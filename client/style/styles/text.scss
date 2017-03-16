@@ -1,0 +1,50 @@
+
+/* Text Styles @fold */
+.pinkButton {
+  background: #ff4081;
+  color: white;
+}
+.pinkHeadline {
+  color: #ff4081;
+  font-size: 6vw;
+  font-weight: bold;
+}
+.bigTitle {
+  font-size: 20px;
+}
+.medTitle {
+  font-weight: bold;
+  font-size: 16px;
+}
+.smallTitle {
+  font-weight: bold;
+  font-size: 12px;
+}
+.bigText {
+  font-size: 18px;
+}
+.medText {
+	font-size: 16px;
+}
+.smallText {
+	font-size: 14px;
+}
+.centerText {
+  text-align: center;
+}
+.underline {
+  text-decoration: underline;
+}
+
+.smallButton {
+	height: 30px;
+	width: 30px;
+	padding: 4px;
+}
+
+paper-tooltip {
+	--paper-tooltip: {
+		font-size: 14px;
+	}
+}
+/* !fold */

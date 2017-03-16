@@ -33,8 +33,7 @@
   "relations": {
     "tags": {
       "type": "hasAndBelongsToMany",
-      "model": "tag",
-      "foreignKey": ""
+      "model": "tag"
     },
     "playlists": {
       "type": "hasAndBelongsToMany",

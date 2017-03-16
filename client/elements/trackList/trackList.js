@@ -1,8 +1,6 @@
 (function() {
   var polymerDefinition;
 
-  console.log("tracklist");
-
   if (window.elements == null) {
     window.elements = {};
   }
@@ -59,6 +57,20 @@
           return res;
         });
       });
+      grid.addEventListener('selected-items-changed', (function(_this) {
+        return function() {
+          var item;
+          item = grid.selection.selected()[0];
+          if (item != null) {
+            return grid.getItem(item, function(err, item) {
+              if (err != null) {
+                app.fail(err);
+              }
+              return app.display.track(item);
+            });
+          }
+        };
+      })(this));
       return console.log(grid.columns);
     },
     attached: function() {},

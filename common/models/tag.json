@@ -13,8 +13,7 @@
   "relations": {
     "libraryEntries": {
       "type": "hasAndBelongsToMany",
-      "model": "libraryEntry",
-      "foreignKey": ""
+      "model": "libraryEntry"
     },
     "jlUser": {
       "type": "belongsTo",

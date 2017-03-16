@@ -1,0 +1,28 @@
+<link rel="import" href="../../style/shared-styles.html" >
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-tags/paper-tags-input.html">
+<link rel="import" href="../../bower_components/paper-ripple/paper-ripple.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+<dom-module id="tag-dropdown">
+	<style include="shared-styles"></style>
+	<style is="custom-style">
+		#albumArt {}
+	</style>
+
+	<template>
+		<paper-tags-input></paper-tags-input>
+		<paper-listbox class="dropdown-content"
+									 id="menu"
+									 items='["testing", "testing1", "testing2"]'
+									 selectedItems="{{selectedTags}}"
+									 multi
+									 stop-keyboard-event-propagation>
+			<template is="dom-repeat" items="{{allTags}}">
+				<paper-item>[[item]]</paper-item>
+			</template>
+		</paper-listbox>
+	</template>
+</dom-module>
+
+<script src="tag-dropdown.js"></script>

@@ -4,28 +4,31 @@ window.elements.app = Polymer(
 	is: "jamlist-app"
 	# Polymer Inits @fold-children
 	properties:
+		libraryEntries:
+			type: Array
 		#Set to true when message recieved from Play Music that a user has been loaded into the app
 		playerActive:
 			type: Boolean
 			value: false
+		playlists:
+			type: Array
+		queue:
+			type: Object
+			value: {}
 		serviceActive:
 			type: Boolean
 			value: false
-		libraryEntries:
-			type: Array
-		playlists:
-			type: Array
 		tags:
 			type: Array
+		tokens:
+			type: Array
+		urlBase:
+			type: "string"
 		user:
 			type: Object
 			notify: true
 			value: ()->
-				return {google: {}, jamlist: {}}
-		urlBase:
-			type: "string"
-		tokens:
-			type: Array
+				return {google: {}, jamlist: {}, deferred: $.Deferred()}
 	listeners:
 		'close-case': 'closeCase'
 	# !fold
@@ -34,10 +37,9 @@ window.elements.app = Polymer(
 		# Plugin FNs @fold
 		beforeSend: (args = {}) =>
 			glogger("last").add args
+			# Append the Google User to the request, UNLESS its a request for the user object itself
 			if app?
-				console.log app
 				if app.__data__?
-					console.log app.__data__
 					args.user = app.user.google
 			return args
 		#!fold
@@ -45,58 +47,158 @@ window.elements.app = Polymer(
 
 	# Lifecycle Functions @fold
 	created: ()->
-		console.log "creating app"
 		window.app = @
 		@urlBase = "localhost"
 		@tokens = []
-		console.log "sending message"
 		@portal.sendMessage({
 			target: "google_music"
 			fn: "userInfo"
 			args: {}
 		}).then((response)=>
+			console.log response
 			#TODO: What if no user yet?
 			@user.google = response.user
+			@user.deferred.resolve()
 		)
 	ready: ()->
 		console.log("ready")
 	attached: ()->									# Page JS Setup, Plugin Listener Creation
 		console.log "attached"
 		@routerSetup()
-		if !app.tokens[app.user.email]?
-			@setRoute("login")
 	# !fold
 
-	#Router @fold
+	#User Management Functions @fold
+	login: (username, password)->
+		@display.spinner()
+		@xhr(
+			method: "POST"
+			url: "http://#{@urlBase}:3000/api/JLUsers/login"
+			data:
+				username: username
+				password: password
+		).then((data)=>
+			Cookies.set("token", data.id)
+			Cookies.set("user", data.userId)
+			@setRoute("tracks")
+			@display.hideSpinner()
+		)
+	logout: ()->
+		@xhr({method: "POST", url: "http://#{@urlBase}:3000/api/DAUsers/login"}).then((response, xhr)->
+			Cookies.remove("token")
+			Cookies.remove("user")
+			page("/login")
+		)
+	# !fold
+
+	#Router and Display @fold-children
 	router: ()->
 		url = location.hash.slice(1) || '/';
-		if @routes[url.substr(1)]?
-			@routes[url.substr(1)].bind(@)()
+		route = @routes.prelim(url.substr(1))
+			.then((route)=>
+				if route and @routes[route]?
+					@routes[route]()
+			).catch((error)=>
+				console.log error
+			)
+
 	routerSetup: ()->
-		@routes = {
-			"login": ()->
-				@display.login.bind(@)()
-			"tracks": ()->
-				@display.trackList.bind(@)()
-		}
 		window.addEventListener('hashchange', @router.bind(@))
-		window.addEventListener('load', @router.bind(@))
+		#window.addEventListener('load', @router.bind(@))
 		@router()
 	setRoute: (route)->
 		window.location.hash = "#/" + route;
+	routes:
+		prelim: (path)->
+		# Returns False if Prelim Sets a new Route, otherwise returns routes[fn] to be called
+			console.log path
+			while app.$.display.firstChild?
+				app.$.display.removeChild(app.$.display.firstChild)
+			return new Promise((resolve, reject)=>
+				if path == "/"
+					app.setRoute("tracks")
+					reject()
+				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
+					app.setRoute("login")
+					reject()
+				else if path != "login" and (!app.playlists? or !app.tags? or !app.libraryEntries?)
+					app.loadJamListData().then(()=>
+						resolve(path)
+					)
+				else
+					resolve(path)
+			)
+		login: ()->
+			login = new elements.login()
+			app.$.display.appendChild(login)
+		tracks: ()->
+			trackList = new elements.trackList()
+			app.$.display.appendChild(trackList)
+		sync: ()->
+			console.log "syncing"
+			app.user.deferred.then(()=>
+				console.log "user resolved"
+				app.syncWithService()
+			)
+		test: ()->
+			testElem = new elements.playlist.detail(1)
+			app.$.display.appendChild(testElem)
+	display:
+		track: (track)->
+			while app.$["trackDisplay"].firstChild?
+				app.$["trackDisplay"].removeChild(app.$["trackDisplay"].firstChild)
+			app.$["trackDisplay"].appendChild new elements.libraryEntry.details(track.id)
+			app.$["trackDisplay"].open()
+		spinner: ()->
+			app.$["spinner-dialog"].open()
+			app.$.spinner.active=true
+		hideSpinner: ()->
+			app.$["spinner-dialog"].close()
+			app.$.spinner.active=false
+	# !fold-children
 
-	upsert: (type, data = {}, where = {})->
-		if type != "track"
-			where.jlUser = @user.jamlist.username
-			data.jlUserId = @user.jamlist.username
-		@xhr(
-			method: "POST"
-			url: "http://#{@urlBase}:3000/api/#{type.pluralize()}/upsertWithWhere"
-			data: data
-			qs:
-				where: where
+	upsert: (type, data = {}, where = {}, force = false)->
+		#TODO: Check library data against incoming data after an id match is found so we 'update' rather than 'skip'
+		return new Promise((resolve, reject)=>
+			if !force
+				if type == "libraryEntry"
+					libraryEntry = _.findWhere(@libraryEntries, where)
+					if libraryEntry?
+						console.log "skipped library entry"
+						resolve(libraryEntry)
+						return
+				else if type == "tag"
+					tag = _.findWhere(@tags, where)
+					if tag?
+						console.log "skipped tag"
+						resolve(tag)
+						return
+				else if type == "track"
+					libraryEntry = _.find(@libraryEntries, (item)->
+						for property, value of where
+							if item.track[property] != value
+								return false
+							else
+								return true
+					)
+					if libraryEntry?
+						console.log "skipped track"
+						resolve(libraryEntry.track)
+						return
+			if type != "track"
+				where.jlUser = Cookies.get("user")
+				data.jlUserId = Cookies.get("user")
+			@xhr(
+				method: "POST"
+				url: "http://#{@urlBase}:3000/api/#{type.pluralize()}/upsertWithWhere"
+				data: data
+				qs:
+					where: where
+			).then((data)=>
+				resolve(data)
+			)
 		)
-	syncWithService: ()->
+	syncWithService: (syncPlaylists = false)->
+		console.log "syncWithService"
 		return new Promise((resolve, reject)=>
 			tracks = @portal.sendMessage({
 				target: "google_music"
@@ -128,12 +230,13 @@ window.elements.app = Polymer(
 							###
 				for playlist, key in servicePlaylists
 					do (playlist)=>
-						if key < 3
+						if key < 999999
 							globalTag = {}
 							console.log playlist
 							Promise.resolve().then(()=>
 								@upsert("tag", {name: playlist.name}, {name: playlist.name})
 							).then((tag)=>
+								console.log tag
 								globalTag = tag
 								@portal.sendMessage({
 									target: "background"
@@ -142,21 +245,21 @@ window.elements.app = Polymer(
 										id: playlist.id
 								})
 							).then((playlistEntries)=>
-								console.log playlistEntries
 								for track, key in playlistEntries
-									console.log track
 									@upsert("track", track, {title: track.title, artist: track.artist, millisduration: track.millisduration}).then((track)=>
+										console.log track
 										id = track.id
 										track.trackId = id
 										delete track.id
 										@upsert("libraryEntry", track, {trackId: id})
 									).then((libraryEntry)=>
+										console.log libraryEntry
 										@xhr(
 											type: "PUT"
-											url: "http://localhost:3000/api/tags/#{globalTag.id}/libraryEntries/rel/#{libraryEntry.id}"
+											url: "http://#{@urlBase}:3000/api/tags/#{globalTag.id}/libraryEntries/rel/#{libraryEntry.id}"
 										)
 									)
-							)
+								)
 				resolve()
 			)
 			###
@@ -184,14 +287,14 @@ window.elements.app = Polymer(
 		return new Promise((resolve, reject)=>
 			libraryEntries = @xhr(
 				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{@user.jamlist.username}/libraryEntries"
+				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/libraryEntries"
 				data:
 					filter:
-						include: ['track', 'tags'] 
+						include: ['track', 'tags']
 			)
 			playlists = @xhr(
 				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{@user.jamlist.username}/playlists"
+				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/playlists"
 				data:
 					filter:
 						include:
@@ -199,7 +302,7 @@ window.elements.app = Polymer(
 			)
 			tags = @xhr(
 				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{@user.jamlist.username}/playlists"
+				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tags"
 			)
 			Promise.all([libraryEntries, playlists, tags]).then((data)=>
 				console.log data
@@ -211,7 +314,13 @@ window.elements.app = Polymer(
 		)
 
 	get: (type, id)->
+		console.log "GETTING"
+		console.log id
 		id = +id
+		console.log type
+		console.log type.pluralize()
+		console.log @[type.pluralize()]
+		console.log id
 		return _.find(@[type.pluralize()], (instData)-> instData.id == id)
 	find: (type, data)->
 		if typeof data == "object"
@@ -219,6 +328,7 @@ window.elements.app = Polymer(
 		if typeof data == "function"
 			return _.find(@[type.pluralize()], data)
 	setAttr: (type, id, localProp, value)->
+		console.log arguments
 		id = +id
 		obj = @get(type, id)
 		if localProp != 'id' #we don't want to change ID, both because it's not a changable prop, and because if we do, we change type and interfere with retreval
@@ -266,17 +376,43 @@ window.elements.app = Polymer(
 					resolve(data.response)
 				)
 		)
+	addTag: (libraryEntryId, tag)->
+		tagData = {}
+		return new Promise((resolve, reject)=>
+			@upsert("tag", {name: tag}, {name: tag}).then((tag)=>
+				tagData = tag
+				@xhr(
+					method: "PUT"
+					url: "http://#{@urlBase}:3000/api/libraryEntries/#{libraryEntryId}/tags/rel/#{tagData.id}"
+				)
+			).then((rel)=>
+				localData = app.get("libraryEntry", libraryEntryId)
+				localData.tags.push(tagData)
+			)
+		)
+	deleteTag: (libraryEntryId, tag)->
+		return new Promise((resolve, reject)=>
+			@upsert("tag", {name: tag}, {name: tag}).then((tag)=>
+				@xhr(
+					method: "DELETE"
+					url: "http://#{@urlBase}:3000/api/libraryEntries/#{libraryEntryId}/tags/rel/#{tag.id}"
+				)
+			).then((rel)=>
+				localData = app.get("libraryEntry", libraryEntryId)
+				localData.tags = _.filter(localData.tags, (tagData)->
+					tagData.name != tag
+				)
+			)
+		)
 	# !fold
 
 	#Data Sync Functions @fold
 	load: ()->
 		console.log "loading"
-		@displaySpinner()
+		@display.spinner()
 	queueData: (type, id, localProp, value)->
-		calcedVars = {																															#todo - don't send calked vars
-			case: ["nextOn", "onFor", "thirtyThirty", "thirtyThirtyNextDate"]
-		}
 		window.clearTimeout(@timeout) if @timeout?
+		@queue[type.pluralize()] = {} if !@queue[type.pluralize()]?
 		@queue[type.pluralize()][id] = {} if !@queue[type.pluralize()][id]?
 		@queue[type.pluralize()][id][localProp] = value
 		@timeout = window.setTimeout(()=>
@@ -284,8 +420,8 @@ window.elements.app = Polymer(
 			for typeKey, type of @queue
 				for id, data of type
 					xhrs.push(@xhr(
-						method: "PUT"
-						url: "http://#{@urlBase}:3000/api/#{typeKey.frontCap()}/#{id}"
+						method: "PATCH"
+						url: "http://#{@urlBase}:3000/api/#{typeKey}/#{id}"
 						data: @queue[typeKey][id]
 					))
 					delete @queue[typeKey][id]
@@ -297,77 +433,18 @@ window.elements.app = Polymer(
 			settings.headers = {}
 		#set query string
 		if settings.qs?
-			console.log settings.qs
-			console.log JSON.stringify(settings.qs)
 			settings.url = settings.url + "?" + $.param(settings.qs)
 		#set login information
 		if Cookies.get("token")?
 			settings.headers.Authorization = Cookies.get("token")
-		return $.ajax(settings)
-	# !fold
 
-	#User Management Functions @fold
-	login: (username, password)->
-		@user.jamlist.username = username
-		@displaySpinner()
-		@xhr(
-			method: "POST"
-			url: "http://#{@urlBase}:3000/api/JLUsers/login"
-			data:
-				username: username
-				password: password
-		).then((data)=>
-			# TODO: failure handling
-			console.log data
-			###
-			if data.xhr.status == 401
-				@fail("Incorrect or unknown username/password!")
-				return
-			###
-			Cookies.set("token", data.id)
-			Cookies.set("user", data.userId)
-			#@syncFromService()
-			@loadJamListData().then((data)=>
-				console.log(@libraryEntries)
-				console.log(@playlists)
-				@syncWithService()
-			).then((data)=>
-				@setRoute("tracks")
-				@hideSpinner()
-			).catch((error)=>
-				console.log error
-			)
-		)
-	logout: ()->
-		@xhr({method: "POST", url: "http://#{@urlBase}:3000/api/DAUsers/login"}).then((response, xhr)->
-			Cookies.remove("token")
-			Cookies.remove("user")
-			page("/login")
-		)
-	# !fold
+		#error handling
+		settings.statusCode =
+			401: ()=>
+				console.log "401 error"
+				app.setRoute("login")
+		$.ajax(settings)
 
-	#Main Display Functions @fold
-	display:
-		prelim: ()->
-			while @$.display.firstChild?
-				@$.display.removeChild(@$.display.firstChild)
-		login: (firstArg)->
-			@display.prelim.bind(@)()
-			login = new elements.login()
-			@$.display.appendChild(login)
-		trackList: ()->
-			@display.prelim.bind(@)()
-			trackList = new elements.trackList()
-			@$.display.appendChild(trackList)
-	# !fold
-
-	#Aux Display Functions
-	displaySpinner: ()->
-		@$["spinner-dialog"].open()
-		@$.spinner.active=true
-	hideSpinner: ()->
-		@$["spinner-dialog"].close()
-		@$.spinner.active=false
 	# !fold
 
 	#Modal Display Functions @fold

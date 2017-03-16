@@ -1,0 +1,68 @@
+<link rel="import" href="../../style/shared-styles.html" >
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../../bower_components/vaadin-date-picker/vaadin-date-picker.html">
+
+<link href="../../style/shared-styles.html" rel="import">
+
+<dom-module id="rule-detail">
+	<style include="shared-styles"></style>
+	<style is="custom-style">	</style>
+	<template>
+		<div row>
+			<paper-dropdown-menu label="Rule">
+				<paper-menu selected="{{ruleType}}" attr-for-selected="id" class="dropdown-content">
+					<paper-item class="horizontal layout" id="rated">Is rated...</paper-item>
+					<paper-item class="horizontal layout" id="has">Is tagged...</paper-item>
+					<paper-item class="horizontal layout" id="hasNot">Is not tagged...</paper-item>
+					<paper-item class="horizontal layout" id="playcount">Play count is...</paper-item>
+					<paper-item class="horizontal layout" id="added">Track added to library...</paper-item>
+					<paper-item class="horizontal layout" id="played">Track last played...</paper-item>
+					<paper-item class="horizontal layout" id="recorded">Track recorded...</paper-item>
+				</paper-menu>
+			</paper-dropdown-menu>
+			<template is="dom-if" if="{{ruleTypeIs('rated', ruleType)}}">
+				<paper-star-field yellow rate="{{rule}}"></paper-star-field>
+				<paper-dropdown-menu label="Direction">
+					<paper-menu selected="{{greater}}" attr-for-selected="id" class="dropdown-content">
+						<paper-item class="horizontal layout" id="1">...or higher.</paper-item>
+						<paper-item class="horizontal layout" id="-1">...or lower.</paper-item>
+					</paper-menu>
+				</paper-dropdown-menu>
+			</template>
+			<template is="dom-if" if="{{ruleTypeIs('tag', ruleType)}}">
+				<paper-dropdown-menu label="Tag" selected="{{rule}}">
+					<paper-menu selected="{{tagId}}" attr-for-selected="id" class="dropdown-content">
+						<template is="dom-repeat" items="{{libraryTags()}}"><paper-item class="horizontal layout" id="{{item.id}}">{{item.name}}</paper-item></template>
+					</paper-menu>
+				</paper-dropdown-menu>
+			</template>
+			<template is="dom-if" if="{{ruleTypeIs('playcount', ruleType)}}">
+				<paper-input value="{{rule}}"></paper-input>
+				<paper-dropdown-menu label="Direction">
+					<paper-menu selected="{{greater}}" attr-for-selected="id" class="dropdown-content">
+						<paper-item class="horizontal layout" id="1">...or more.</paper-item>
+						<paper-item class="horizontal layout" id="-1">...or fewer.</paper-item>
+					</paper-menu>
+				</paper-dropdown-menu>
+			</template>
+			<template is="dom-if" if="{{ruleTypeIs('date', ruleType)}}">
+				<paper-dropdown-menu label="Range">
+					<paper-menu selected="{{greater}}" attr-for-selected="id" class="dropdown-content">
+						<paper-item class="horizontal layout" id="0">...is within the last...</paper-item>
+						<paper-item class="horizontal layout" id="-1">...is on or before...</paper-item>
+						<paper-item class="horizontal layout" id="1">...is on or after...</paper-item>
+					</paper-menu>
+				</paper-dropdown-menu>
+				<template is="dom-if" if="{{dateDisplayIs('days', greater)}}"><paper-input value="{{rule}}"></paper-input> days.</template>
+				<template is="dom-if" if="{{dateDisplayIs('picker', greater)}}">
+					<vaadin-date-picker value="{{rule}}"></vaadin-date-picker>
+				</template>
+			</template>
+		</div>
+	</template>
+</dom-module>
+
+<script src="rule.js"></script>

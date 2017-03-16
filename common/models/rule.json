@@ -4,35 +4,18 @@
   "base": "PersistedModel",
   "idInjection": true,
   "properties": {
-    "group": {
-      "type": "number",
-      "required": true
-    },
-    "has": {
-      "type": "number",
-      "required": true
-    },
-    "hasNot": {
-      "type": "number",
-      "required": true
-    },
-    "played": {
-      "type": "number",
-      "required": true
-    },
-    "dated": {
-      "type": "number",
-      "required": true
-    },
-    "rated": {
-      "type": "number",
-      "dataType": "float",
-      "precision": 2,
-      "scale": 1
+		"ruleType": {
+			"type": "string"
+		},
+    "rule": {
+      "type": "number"
     },
     "greater": {
-      "type": "number"
-    }
+      "type": "boolean"
+    },
+		"group": {
+			"type": "number"
+		}
   },
   "validations": [],
   "relations": {

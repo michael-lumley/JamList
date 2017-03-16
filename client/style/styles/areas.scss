@@ -1,0 +1,49 @@
+
+/* Div Styles @fold */
+div[blackBorder] {
+  border: 1px solid grey;
+}
+div[roundedCorners] {
+  border-radius: 10px;
+}
+div[topRoundedInterior] {
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
+  padding-top: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+div[middleInterior] {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+div[bottomRoundedInterior] {
+  padding-bottom: 12px;
+  padding-right: 12px;
+  padding-left: 12px;
+  border-bottom-left-radius: 9px;
+  border-bottom-right-radius: 9px;
+}
+div[pad] {
+  padding: 12px;
+}
+div[marg] {
+	margin: 12px;
+}
+
+div[text-left]{
+	text-align: left;
+}
+div[text-right]{
+	text-align: right;
+}
+div[text-middle]{
+	text-align: center;
+}
+
+
+div[shadow] {
+	box-shadow: 2px 2px 4px #ccc;
+}
+
+/* !fold */

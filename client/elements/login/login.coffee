@@ -8,6 +8,4 @@ window.elements.login = Polymer(
     password:
       type: String
   login: ()-> app.login(@username, @password)
-  created: ()-> console.log "created login"
-  ready: ()-> console.log "ready login"
 )

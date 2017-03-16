@@ -1,0 +1,41 @@
+
+/* Layouts @fold */
+div[row] {
+	@apply(--layout-horizontal);
+	@apply(--layout-justified);
+	&not([noflex]) {
+		@apply(--layout-flex);
+	}
+}
+div[row]{
+	> * {
+		@apply(--layout-self-start);
+	}
+	&[center] > * {
+		@apply(--layout-self-center);
+	}
+	&[bottom] > * {
+		@apply(--layout-self-end);
+	}
+}
+div[col] {
+	@apply(--layout-flex);
+	@apply(--layout-vertical);
+	@apply(--flex-stretch-align);
+}
+div[one] {
+  @apply(--layout-flex);
+}
+div[two] {
+  @apply(--layout-flex-2);
+}
+div[three] {
+  @apply(--layout-flex-3);
+}
+div[four] {
+  @apply(--layout-flex-4);
+}
+div[five] {
+  @apply(--layout-flex-5);
+}
+/* !fold */

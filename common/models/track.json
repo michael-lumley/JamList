@@ -21,6 +21,9 @@
     },
 		"trackNo": {
 			"type": "number"
+		},
+		"albumArtLink": {
+			"type": "string"
 		}
   },
   "validations": [],

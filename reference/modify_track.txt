@@ -1,0 +1,48 @@
+GENERAL
+Request URL:https://play.google.com/music/services/modifytracks?u=0&format=jsarray&xt=CjUKATASMEFNLVdiWGhOUzJhc09SZkw0c0ZiSjJUYng1cWhSd0UtMnc6MTQ4ODY1OTUxNzU4MA%3D%3D&dv=148664969&obfid=02979596502261659673
+Request Method:POST
+Status Code:200
+Remote Address:172.217.4.78:443
+
+Response Headers
+alt-svc:quic=":443"; ma=2592000; v="36,35,34"
+cache-control:private, max-age=0
+content-encoding:gzip
+content-length:49
+content-type:text/plain; charset=UTF-8
+date:Sun, 05 Mar 2017 10:59:56 GMT
+expires:Sun, 05 Mar 2017 10:59:56 GMT
+server:GSE
+status:200
+x-content-type-options:nosniff
+x-frame-options:SAMEORIGIN
+x-xss-protection:1; mode=block
+
+Request Headers
+:authority:play.google.com
+:method:POST
+:path:/music/services/modifytracks?u=0&format=jsarray&xt=CjUKATASMEFNLVdiWGhOUzJhc09SZkw0c0ZiSjJUYng1cWhSd0UtMnc6MTQ4ODY1OTUxNzU4MA%3D%3D&dv=148664969&obfid=02979596502261659673
+:scheme:https
+accept:*/*
+accept-encoding:gzip, deflate, br
+accept-language:en-US,en;q=0.8
+cache-control:no-cache
+content-length:353
+content-type:application/x-www-form-urlencoded;charset=UTF-8
+cookie:xt=CjUKATASMEFNLVdiWGdZYk9jbUlMdmVBS1FSX2pFQ1pKYlYzMVphaXc6MTQ4ODYyOTgyNzM3MA==; __utma=45884901.2016117629.1450176562.1488658657.1488659515.91; __utmb=45884901.4.9.1488711494029; __utmc=45884901; __utmz=45884901.1488144259.79.10.utmcsr=accounts.google.com|utmdsid=CMmSzPiZ4s4CFVcRNwodIAwPcw|utmccn=(referral)|utmcmd=referral|utmcct=/ServiceLogin; sjsaid=7ca6265c-4b95-4e6b-b13b-a6648de5b791; sjpref=v:65|; xt=CjUKATASMEFNLVdiWGhOUzJhc09SZkw0c0ZiSjJUYng1cWhSd0UtMnc6MTQ4ODY1OTUxNzU4MA==; _ga=GA1.3.1852665650.1453557252; SID=ZQQ4zyESVKhtDCo2Qpe24rM59RrU4jGziHtlWYPRZBQe9qdiHtCb1yWEMo8iw6GIh9IEAg.; HSID=Aq1AXemmrQ2j5HrUM; SSID=AaMsKst98Sv_de39G; APISID=7F_Z9ZIqXeMR5j35/AlQ9Hxsywlzxywpjd; SAPISID=ic_XyuKea3F83c42/A66k0yCe3HjY3rGJp; OGPC=5061900-14:5061918-2:5061921-1:5061937-27:5061941-13:5061940-11:5061574-10:5061983-4:5061997-13:103910400-5:5062028-8:681502720-5:845686784-30:5062123-6:5062117-1:5062171-1:5062172-2:5062186-8:5062177-16:5062194-13:5062204-18:5062212-2:391792640-31:732465152-5:699960320-7:749442048-1:448059392-5:712676352-12:816734208-4:527891456-15:979538944-10:961419264-49:412595200-14:811773952-6:604273664-36:177517568-6:; PLAY_ACTIVE_ACCOUNT=ICrt_XL61NBE_S0rhk8RpG0k65e0XwQVdDlvB6kxiQ8=mike.lumley@gmail.com; NID=98=AmQGVYF_m4SEnSJZkWavwm0c3Kv394-ofxaG3hZjvWC43ehVkq38Fp64iBSntrXKgwiAz8y9nJsGAZtzILd5DyeBVR8u0J9qsJKt70kbLbwzF1iJbYX_Y2EpJ0U_i0Ddt0MwkczIW8heB5JXJDKnlBof3DICrCliGgqReAz0208Ayb7GLFItXq7-2ivAcZZ8p8IgWyEoP47YseDEkOtEm7FgyLEHeOYZSj2v0I4KzP4adlST25kgnJu3x96XHOO6nX9JyizZEcbJtiJOgvxHdZupvD-YcXsMw0K4rv8gGg
+origin:https://play.google.com
+pragma:no-cache
+referer:https://play.google.com/music/listen
+user-agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36
+x-chrome-uma-enabled:1
+x-client-data:CJS2yQEIpLbJAQjAmcoBCPqcygEIqZ3KAQ==
+
+Query String Parameters
+u:0
+format:jsarray
+xt:CjUKATASMEFNLVdiWGhOUzJhc09SZkw0c0ZiSjJUYng1cWhSd0UtMnc6MTQ4ODY1OTUxNzU4MA==
+dv:148664969
+obfid:02979596502261659673
+
+Form Data
+[["fv5c52xyxnrh",1],[[["37514252-bd7d-3f08-93db-4c76813f5be8","Age Of Magic",null,null,null,null,null,null,null,null,null,null,null,null,"1",0,0,0,0,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[],null,null,true,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,[]]]]]:

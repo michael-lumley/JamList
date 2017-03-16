@@ -1,5 +1,11 @@
 <link href="../login/login.html" rel="import">
 <link href="../trackList/trackList.html" rel="import">
+<link href="../libraryEntry/libraryEntry.html" rel="import">
+<link href="../playlist/playlist.html" rel="import">
+<link href="../rule/rule.html" rel="import">
+<link href="../playlist/playlist.html" rel="import">
+<link href="../tag-dropdown/tag-dropdown.html" rel="import">
+
 <link href="../../bower_components/polymer/polymer-micro.html" rel="import">
 <link href="../../bower_components/paper-item/paper-item.html" rel="import">
 <link href="../../bower_components/paper-dialog/paper-dialog.html" rel="import">
@@ -9,8 +15,11 @@
 <link href="../../bower_components/paper-button/paper-button.html" rel="import">
 <link href="../../bower_components/paper-input/paper-input.html" rel="import">
 <link href="../../bower_components/paper-datatable/paper-datatable.html" rel="import">
+<link href="../../bower_components/paper-tags/paper-tags.html">
 <script src="../../bower_components/webcomponentsjs/webcomponents.js"></script>
 <script src="../../bower_components/js-cookie/src/js.cookie.js"></script>
+
+<link rel="import" href="../../style/dark-side/dark-side.html">
 
 
 <dom-module id="jamlist-app">
@@ -55,8 +64,8 @@
 				</div>
 			</div>
 		</paper-drawer-panel>
-		<paper-dialog id="DACaseDisplay" _interestedResizables="[]" with-backdrop style="width: 85%; max-height: 90%; height: 90%; overflow: hidden">
-				<div id="caseDisplayTarget" style="padding: 0px; margin: 0px; height: 100%"></div>
+		<paper-dialog id="trackDisplay" _interestedResizables="[]" with-backdrop style="width: 85%; max-height: 90%; height: 90%; overflow: hidden">
+				<div id="trackDisplayTarget" style="padding: 0px; margin: 0px; height: 100%"></div>
 		</paper-dialog>
 		<paper-dialog id="errorDialog" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
 			<div class="horizontal layout center center-justified" style="padding: 0px; margin: 0px; font-size:24px; padding-bottom: 6px">
@@ -73,57 +82,6 @@
 	    	<paper-button dialog-dismiss>Cancel</paper-button>
 	    </paper-item>
 		</paper-dialog>
-		<paper-dialog id="auditCaseReview">
-      <div id="results" class="horizontal layout" style="max-height: 900px; overflow-y: scroll">
-        <div id="auditAdd">
-          <div id="addTitle" class="horizontal layout end">
-						<paper-item><h2>Add Cases</h2></paper-item>
-						<paper-item>(<a href="javascript:void(0);" on-click="selectAllNewAudit">Select All</a>)</paper-item>
-					</div>
-					<template is="dom-repeat" items="{{audit.new}}" as="item">
-            <div class="horizontal layout center" style="padding-bottom: 0.5em">
-              <div><paper-checkbox checked="{{item.execute}}" style="margin: 0px"></paper-checkbox></div>
-              <div class="flex">
-                <b><span>{{item.defendantLast}}</span>, <span>{{item.defendantFirst}}</span></b> (<span>{{item.docketNumber}}</span>)
-              </div>
-            </div>
-          </template>
-        </div>
-				<div id="auditSync">
-					<div id="updateTitle" class="horizontal layout end">
-						<paper-item><h2>Conflicts</h2></paper-item>
-					</div>
-					<template is="dom-repeat" items="{{syncAuditCases}}" as="item">
-						<div class="horizontal layout center" style="padding-bottom: 0.5em">
-							<div><paper-checkbox checked="{{item.sync}}" style="margin: 0px"></paper-checkbox></div>
-							<div class="flex center">
-								<b><span>{{item.defendantLast}}</span>, <span>{{item.defendantFirst}}</span></b> (<span>{{item.docketNumber}}</span>)
-								{{item.db.defendantLast}}, {{item.db.defendantFirst}} ({{item.db.docketNumber}}) - Next On: {{item.db.nextOn}} for {{item.db.onFor}}<br>
-								will be updated to <br>
-								{{item.dcs.defendantLast}}, {{item.dcs.defendantFirst}} ({{item.dcs.docketNumber}}) - Next On: {{item.dcs.nextOn}}
-							</div>
-						</div>
-					</template>
-				</div>
-        <!--
-
-        <h2 style="margin-top:1em">Audit Results - Delete Cases</h2>
-        <template is="dom-repeat" items="{{deleteAuditCases}}" as="item">
-          <div class="horizontal layout center" style="padding-bottom: 0.5em">
-            <div><paper-checkbox checked="{{item.sync}}" style="margin: 0px"></paper-checkbox></div>
-            <div class="flex">
-              <b>{{item.defendantLast}}, {{item.defendantFirst}}</b> ({{item.docketNumber}})<br>
-              Next On: {{item.nextOn}} for {{item.onFor}}
-            </div>
-          </div>
-        </template>
-      </div>-->
-			</div>
-    	<paper-item class="bar horizontal layout end-justified">
-      	<paper-button class="pinkButton" on-click="finishAudit">Finalize Changes</paper-button>
-      	<paper-button dialog-dismiss>Cancel</paper-button>
-    	</paper-item>
-    </paper-dialog>
   </template>
 </dom-module>
 

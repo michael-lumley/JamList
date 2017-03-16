@@ -1,5 +1,3 @@
-console.log("tracklist")
-
 window.elements = {} if !window.elements?
 polymerDefinition = {
 	is: "track-list"
@@ -47,6 +45,15 @@ polymerDefinition = {
 				return res
 			)
 		)
+		grid.addEventListener('selected-items-changed', ()=>
+			item = grid.selection.selected()[0]
+			if item?
+				grid.getItem(item, (err, item)=>
+					app.fail(err) if err?
+					app.display.track(item)
+				)
+		)
+
 		console.log grid.columns
 	attached: ()->
 	# !fold
