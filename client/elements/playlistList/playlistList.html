@@ -1,0 +1,54 @@
+<link rel="import" href="../../style/shared-styles.html">
+
+<!--https://vaadin.com/elements/-/element/vaadin-grid-->
+
+<dom-module id="playlist-list">
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
+	<style include="shared-styles"></style>
+  <style></style>
+
+  <template>
+		<div text-middle><h1>Playlists</h1></div>
+		<div flex row>
+			<div flex one>
+				<paper-menu selected="{{activeList}}" attr-for-selected="key" style="height: 100%; width: 100%">
+					<template is="dom-repeat" items="{{playlists}}">
+						<paper-item key="[[item.id]]">[[item.name]]</paper-item>
+					</template>
+				</paper-menu>
+			</div>
+			<div flex five>
+				<iron-pages selected="{{activeList}}" attr-for-selected="key">
+					<template is="dom-repeat" items="{{playlists}}">
+						<div key="[[item.id]]">
+							<playlist-detail
+								id="{{item.id}}"
+								rules="{{item.rules}}"
+								name="{{item.name}}"
+								library-entries="{{libraryEntries}}"
+							></playlist-detail>
+						</div>
+					</template>
+				</iron-pages>
+			</div>
+		<!--<iron-data-table id="playlistList" items="[[data]]" style="height: 100%" details-enabled>
+			<template is="row-detail">
+				<div>
+					<iron-overlay-backdrop></iron-overlay-backdrop>
+					<paper-dialog id="Playlist{{item.id}}">
+						<playlist-detail
+							id="{{item.id}}"
+							rules="{{item.rules}}"
+							name="{{item.name}}"
+							library-entries="{{libraryEntries}}"
+						>
+					</playlist-detail>
+					</paper-dialog>
+				</div>
+			</template>
+			<data-table-column name="Name" sort-by="name"><template>[[item.name]]</template></data-table-column>
+		</iron-data-table>-->
+	</template>
+</dom-module>
+
+<script src="playlistList.js"></script>

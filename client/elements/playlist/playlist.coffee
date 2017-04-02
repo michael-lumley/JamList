@@ -15,12 +15,15 @@ window.elements.playlist.base = {
 			source: "playlist"
 			notify: true
 			value: []
+		libraryEntries:
+			type: Array
+			notify: true
+		filteredEntries:
+			type: Array
+			notify: true
 		formattedRules:
 			source: "computed"
 			computed: 'formatRules(rules.*)'
-		tracks:
-			source: "computed"
-			computed: 'filterTracks(rules.*)'
 
 	#@fold Polymer Inits
 	factoryImpl: (id)->
@@ -63,14 +66,15 @@ window.elements.playlist.base = {
 	#@fold-children Filtering
 	filterTracks: (rules)->
 		console.log "filtering"
-		ret = app.libraryEntries
+		console.log @libraryEntries
+		entries = @libraryEntries
 		for rule in rules
-			console.log rule
-			console.log @filters[rule.ruleType]
-			ret = @filters[rule.ruleType](ret, rule) if @filters[rule.ruleType]?
-			console.log ret
-		console.log ret
-		return ret
+			entries = @filters[rule.ruleType](entries, rule) if @filters[rule.ruleType]?
+		console.log entries
+		console.log @libraryEntries
+		for entry in entries
+			this.$.selector.select(entry)
+		console.log @filteredEntries
 	filters:
 		rated: (libraryEntries, rule)->
 			ret = []
@@ -85,17 +89,21 @@ window.elements.playlist.base = {
 			ret = []
 			for libraryEntry in libraryEntries
 				for tag in libraryEntry.tags
-					if tag.id == rule.rule
+					if tag.id + 0 == rule.rule + 0
 						ret.push(libraryEntry)
 			return ret
 		hasNot: (libraryEntries, rule)->
 			ret = []
-			select = true
 			for libraryEntry in libraryEntries
+				select = true
 				for tag in libraryEntry.tags
-					if tag.id == rule.rule
+					console.log "#{libraryEntry.track.title} - not tagged #{rule.rule}, #{tag.id} - #{tag.name}"
+					if tag.id + 0 == rule.rule + 0
+						console.log "excluded"
 						select = false
-				ret.push(libraryEntry) if select
+				if select
+					console.log "including"
+					ret.push(libraryEntry)
 			return ret
 		playcount: (libraryEntries, rule)->
 			ret = []

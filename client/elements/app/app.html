@@ -1,10 +1,12 @@
-<link href="../login/login.html" rel="import">
 <link href="../trackList/trackList.html" rel="import">
+<link href="../playlistList/playlistList.html" rel="import">
 <link href="../libraryEntry/libraryEntry.html" rel="import">
 <link href="../playlist/playlist.html" rel="import">
 <link href="../rule/rule.html" rel="import">
 <link href="../playlist/playlist.html" rel="import">
 <link href="../tag-dropdown/tag-dropdown.html" rel="import">
+
+<link rel="import" href="../../style/shared-styles.html">
 
 <link href="../../bower_components/polymer/polymer-micro.html" rel="import">
 <link href="../../bower_components/paper-item/paper-item.html" rel="import">
@@ -13,16 +15,20 @@
 <link href="../../bower_components/paper-spinner/paper-spinner.html" rel="import">
 <link href="../../bower_components/paper-dialog/paper-dialog.html" rel="import">
 <link href="../../bower_components/paper-button/paper-button.html" rel="import">
+<link href="../../bower_components/iron-pages/iron-pages.html" rel="import">
 <link href="../../bower_components/paper-input/paper-input.html" rel="import">
+<link href="../../bower_components/paper-tabs/paper-tabs.html" rel="import">
 <link href="../../bower_components/paper-datatable/paper-datatable.html" rel="import">
 <link href="../../bower_components/paper-tags/paper-tags.html">
+<link href="../../bower_components/iron-icons/iron-icons.html" rel="import">
+<link href="../../bower_components/iron-icons/av-icons.html" rel="import">
+<link href="../../bower_components/iron-icons/social-icons.html" rel="import">
 <script src="../../bower_components/webcomponentsjs/webcomponents.js"></script>
 <script src="../../bower_components/js-cookie/src/js.cookie.js"></script>
 
-<link rel="import" href="../../style/dark-side/dark-side.html">
-
-
 <dom-module id="jamlist-app">
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
+	<style include="shared-styles"></style>
   <style>
 		.bar {
 				padding: 0px;
@@ -51,19 +57,53 @@
 		}
 	</style>
   <template>
+		<iron-pages selected="{{route}}" attr-for-selected="key">
+			<!--@fold-->
+			<div key="app">
+				<paper-tabs selected="{{path}}" attr-for-selected="key">
+					<paper-tab key="tracks" on-click=""><iron-icon icon="av:library-music"></iron-icon>&nbsp;Tracks</paper-tab>
+					<paper-tab key="tags"><iron-icon icon="icons:bookmark"></iron-icon>&nbsp;Tags</paper-tab>
+					<paper-tab key="playlists"><iron-icon icon="av:playlist-play"></iron-icon>&nbsp;Playlists</paper-tab>
+					<paper-tab key="settings"><iron-icon icon="social:person"></iron-icon>&nbsp;Account</paper-tab>
+				</paper-tabs>
+
+				<iron-pages selected="{{path}}" attr-for-selected="key" style="padding-top: 7px">
+					<!--@fold-->
+					<div key="tracks">
+						<track-list data="{{libraryEntries}}"></track-list>
+					</div>
+					<div key="tags">TAGS</div>
+					<div key="playlists">
+						<playlist-list
+							playlists="{{playlists}}"
+							library-entries="{{libraryEntries}}"
+						></playlist-list>
+					</div>
+					<div key="settings">USER</div>
+					<!--!fold-->
+				</iron-pages>
+			</div>
+			<div key="login">
+				<paper-material elevation="1" style="width: 300px">
+		      <paper-item class="layout center"><h1>Jam List Music Database</h1></paper-item>
+		      <paper-item class="layout" style="padding: 0px">
+		        <paper-input label="Username" value="{{user.login.username}}" style="width: 100%"></paper-input>
+		      </paper-item>
+		      <paper-item class="layout" style="padding: 0px">
+		        <paper-input label="Password" value="{{user.login.password}}" type="password" style="width: 100%"></paper-input>
+		      </paper-item>
+		      <paper-item class="layout center end-justified" style="padding:10px">
+		        <paper-button class="greenButton" on-click="login">Login</paper-button>
+		      </paper-item>
+		    </paper-material>
+			</div>
+			<!--!fold-->
+		</iron-pages>
+
+		<!--@fold-->
 		<paper-dialog id="spinner-dialog" modal>
 			<paper-spinner id="spinner"></paper-spinner>
 		</paper-dialog>
-		<paper-drawer-panel id="drawer" responsive-width="2400px">
-			<div drawer id="menuDrawer"></div>
-			<div main style="overflow-y: scroll">
-				<paper-fab id="menu-fab" icon="menu" style="margin-bottom: 0px" paper-drawer-toggle></paper-fab>
-				<div id="display">
-					<div id="placeholder">
-					</div>
-				</div>
-			</div>
-		</paper-drawer-panel>
 		<paper-dialog id="trackDisplay" _interestedResizables="[]" with-backdrop style="width: 85%; max-height: 90%; height: 90%; overflow: hidden">
 				<div id="trackDisplayTarget" style="padding: 0px; margin: 0px; height: 100%"></div>
 		</paper-dialog>
@@ -82,6 +122,7 @@
 	    	<paper-button dialog-dismiss>Cancel</paper-button>
 	    </paper-item>
 		</paper-dialog>
+		<!--!fold-->
   </template>
 </dom-module>
 

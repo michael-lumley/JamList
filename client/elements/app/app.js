@@ -38,6 +38,10 @@
         notify: true,
         value: function() {
           return {
+            login: {
+              username: "",
+              password: ""
+            },
             google: {},
             jamlist: {},
             deferred: $.Deferred()
@@ -68,6 +72,7 @@
       window.app = this;
       this.urlBase = "localhost";
       this.tokens = [];
+      console.log("sending user request");
       return this.portal.sendMessage({
         target: "google_music",
         fn: "userInfo",
@@ -87,20 +92,20 @@
       console.log("attached");
       return this.routerSetup();
     },
-    login: function(username, password) {
+    login: function() {
       this.display.spinner();
       return this.xhr({
         method: "POST",
         url: "http://" + this.urlBase + ":3000/api/JLUsers/login",
         data: {
-          username: username,
-          password: password
+          username: this.user.login.username,
+          password: this.user.login.password
         }
       }).then((function(_this) {
         return function(data) {
           Cookies.set("token", data.id);
           Cookies.set("user", data.userId);
-          _this.setRoute("tracks");
+          _this.setRoute("app");
           return _this.display.hideSpinner();
         };
       })(this));
@@ -132,7 +137,7 @@
     },
     routerSetup: function() {
       window.addEventListener('hashchange', this.router.bind(this));
-      return this.router();
+      return window.addEventListener('load', this.router.bind(this));
     },
     setRoute: function(route) {
       return window.location.hash = "#/" + route;
@@ -140,9 +145,6 @@
     routes: {
       prelim: function(path) {
         console.log(path);
-        while (app.$.display.firstChild != null) {
-          app.$.display.removeChild(app.$.display.firstChild);
-        }
         return new Promise((function(_this) {
           return function(resolve, reject) {
             if (path === "/") {
@@ -163,14 +165,11 @@
         })(this));
       },
       login: function() {
-        var login;
-        login = new elements.login();
-        return app.$.display.appendChild(login);
+        console.log("setting path");
+        return app.route = "login";
       },
-      tracks: function() {
-        var trackList;
-        trackList = new elements.trackList();
-        return app.$.display.appendChild(trackList);
+      app: function() {
+        return app.route = "app";
       },
       sync: function() {
         console.log("syncing");
@@ -182,9 +181,7 @@
         })(this));
       },
       test: function() {
-        var testElem;
-        testElem = new elements.playlist.detail(1);
-        return app.$.display.appendChild(testElem);
+        return app.route = "test";
       }
     },
     display: {

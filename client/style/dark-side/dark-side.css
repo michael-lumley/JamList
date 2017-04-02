@@ -1,29 +1,20 @@
-/*
- * PolymerThemes v1.0.3
- * Homepage: https://polymerthemes.com
- * Copyright 2015 Polymer Themes
- * Licensed under BSD
- * Based on Polymer: http://www.polymer-project.org/
- * Compatible with Polymer 1.0
- */
-
-@import url("https://fonts.googleapis.com/css?family=Open+Sans|Oswald:700");
+@import url("https://fonts.googleapis.com/css?family=Open+Sans|Oswald:700|Material+Icons");
 html { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; font-size: 16px; }
 
 html, body { margin: 0px; padding: 0px; min-height: 100%; color: #ffffff; background-color: #212121; font-family: 'Open Sans', sans-serif; font-weight: 400; }
 
-section { padding: 40px 0px; }
+section { padding: 15px 0px; }
 section[hero] { background-color: #2c2f2f; }
 
 h1, h2, h3, h4, h5, h6 { font-weight: 400; margin: 0px; padding: 0px; line-height: 1em; }
 
 h1, h3, h5 { font-family: 'Oswald', sans-serif; }
 
-h1 { font-size: 50px; margin: 30px 0px; }
+h1 { font-size: 50px; margin: 15px 0px; }
 
-h2 { color: #ffffff; font-size: 35px; margin: 20px 0px; }
+h2 { color: #ffffff; font-size: 35px; margin: 10px 0px; }
 
-h3 { font-size: 25px; margin: 15px 0px; }
+h3 { font-size: 35px; margin: 15px 0px; }
 
 h4 { font-size: 20px; }
 

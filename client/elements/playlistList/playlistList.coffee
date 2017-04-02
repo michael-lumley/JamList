@@ -2,11 +2,15 @@ console.log "tracklistload"
 
 window.elements = {} if !window.elements?
 polymerDefinition = {
-	is: "track-list"
+	is: "playlist-list"
 	# Polymer Inits @fold-children
 	properties:
-		data:
+		playlists:
 			type: Array
+			notify: true
+		libraryEntries:
+			type: Array
+			notify: true
 	listeners:
 		'_deleteConfirm': '_deleteConfirm'
 		'_generateNote': '_generateNote'
@@ -20,17 +24,27 @@ polymerDefinition = {
 		console.log "listelemcreate"
 		console.log @
 	ready: ()->			 # Create Filters; Row Style Func
-		console.log "trackelemready"
+		console.log @libraryEntries
+		###
+		list = @.$.playlistList
+		list.addEventListener('expanding-item', (e)=>
+			expandedItem = e.detail.item
+			@async(()=>
+				item = document.getElementById("Playlist" + expandedItem.id)
+				console.log item
+				item.addEventListener('iron-overlay-closed', (e)=>
+					list.collapseItem(expandedItem) #need to collapseItem so that the next click isn't a 'close' event on the detail
+				)
+				item.fitInto = window
+				item.resetFit()
+				item.open()
+			, "50")
+		)
+		###
 	attached: ()->
 	# !fold
 
 	# Event Functions @fold
-	_deleteConfirm: (e)->
-		console.log e
-		console.log e.srcElement.id
-		@activeCase = app.get("case", e.srcElement.eid)
-		console.log "deleteConfirm"
-		console.log (@activeCase)
-		@$.confirmDelete.open()
 }
+
 window.elements.trackList = Polymer(polymerDefinition);

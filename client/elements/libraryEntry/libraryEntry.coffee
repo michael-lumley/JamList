@@ -46,6 +46,18 @@ window.elements.libraryEntry.base = {
 	# !fold
 
 	# Lifecycle Functions @fold
+	ready: ()->
+		console.log "ready"
+		console.log @tags
+		@addEventListener("tag-added", (e)=>
+			app.addTag(@libraryEntryId, e.detail)
+		)
+		@addEventListener("tag-removed", (e)=>
+			console.log e 
+			app.deleteTag(@libraryEntryId, e.detail.item)
+		)
+		#@factoryImpl(@id)
+	###
 	factoryImpl: (id)->
 		# LOAD DATA INTO ELEMENT DYNAMICALLY
 		libraryEntryId = id
@@ -89,16 +101,10 @@ window.elements.libraryEntry.base = {
 				console.log e
 				app.deleteTag(@libraryEntryId, e.detail.item)
 			)
+	###
 	# !fold
 }
 
 window.elements.libraryEntry.details = Polymer(_$.deepSafeExtend(window.elements.libraryEntry.base, {
 	is: "library-entry-details"
-	created: ()->
-		console.log "trackCreate"
-	ready: ()->
-		console.log "trackReady"
-	attached: ()->
-		console.log "trackAttach"
-		console.log @rating
 }));

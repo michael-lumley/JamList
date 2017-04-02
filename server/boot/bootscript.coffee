@@ -1,6 +1,6 @@
 module.exports = (app) ->
 	console.log("booting")
-	app.refresh = true
+	app.refresh = false
 
 	console.log app.refresh
 	if app.refresh

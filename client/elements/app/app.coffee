@@ -28,7 +28,7 @@ window.elements.app = Polymer(
 			type: Object
 			notify: true
 			value: ()->
-				return {google: {}, jamlist: {}, deferred: $.Deferred()}
+				return {login: {username: "", password: ""}, google: {}, jamlist: {}, deferred: $.Deferred()}
 	listeners:
 		'close-case': 'closeCase'
 	# !fold
@@ -50,6 +50,7 @@ window.elements.app = Polymer(
 		window.app = @
 		@urlBase = "localhost"
 		@tokens = []
+		console.log "sending user request"
 		@portal.sendMessage({
 			target: "google_music"
 			fn: "userInfo"
@@ -68,18 +69,18 @@ window.elements.app = Polymer(
 	# !fold
 
 	#User Management Functions @fold
-	login: (username, password)->
+	login: ()->
 		@display.spinner()
 		@xhr(
 			method: "POST"
 			url: "http://#{@urlBase}:3000/api/JLUsers/login"
 			data:
-				username: username
-				password: password
+				username: @user.login.username
+				password: @user.login.password
 		).then((data)=>
 			Cookies.set("token", data.id)
 			Cookies.set("user", data.userId)
-			@setRoute("tracks")
+			@setRoute("app")
 			@display.hideSpinner()
 		)
 	logout: ()->
@@ -100,19 +101,16 @@ window.elements.app = Polymer(
 			).catch((error)=>
 				console.log error
 			)
-
 	routerSetup: ()->
 		window.addEventListener('hashchange', @router.bind(@))
-		#window.addEventListener('load', @router.bind(@))
-		@router()
+		window.addEventListener('load', @router.bind(@))
+		#@router()
 	setRoute: (route)->
 		window.location.hash = "#/" + route;
 	routes:
 		prelim: (path)->
 		# Returns False if Prelim Sets a new Route, otherwise returns routes[fn] to be called
 			console.log path
-			while app.$.display.firstChild?
-				app.$.display.removeChild(app.$.display.firstChild)
 			return new Promise((resolve, reject)=>
 				if path == "/"
 					app.setRoute("tracks")
@@ -128,11 +126,10 @@ window.elements.app = Polymer(
 					resolve(path)
 			)
 		login: ()->
-			login = new elements.login()
-			app.$.display.appendChild(login)
-		tracks: ()->
-			trackList = new elements.trackList()
-			app.$.display.appendChild(trackList)
+			console.log "setting path"
+			app.route = "login"
+		app: ()->
+			app.route = "app"
 		sync: ()->
 			console.log "syncing"
 			app.user.deferred.then(()=>
@@ -140,8 +137,7 @@ window.elements.app = Polymer(
 				app.syncWithService()
 			)
 		test: ()->
-			testElem = new elements.playlist.detail(1)
-			app.$.display.appendChild(testElem)
+			app.route = "test"
 	display:
 		track: (track)->
 			while app.$["trackDisplay"].firstChild?

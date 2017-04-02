@@ -1,46 +1,94 @@
-<link rel="import" href="../../style/shared-styles.html" >
+<link rel="import" href="../../style/shared-styles.html">
 
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
 <link rel="import" href="../rule/rule.html">
 
 <dom-module id="playlist-detail">
-	<link rel="import" href="../../style/dark-side/dark-side.css" type="css" >
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
 	<style include="shared-styles"></style>
-	<style
 	<style is="custom-style"></style>
 
 	<template>
 		<div col flex>
-			<paper-input label="Title" value="{{name}}"></paper-input>
-			<div blackBorder roundedCorners pad>
-				Match ALL of the following rules...
-				<template is="dom-repeat" items="{{formattedRules}}" as="group">
-					<div hero blackBorder roundedCorners pad marg>
-						<div row>
-							Match ANY of the following rules...
-							<paper-icon-button icon="icons:add-circle" on-tap="addRule" key="{{group.key}}"></paper-icon-button>
+			<section>
+				<div text-middle><h3>{{name}}</h3></div>
+				<paper-input label="Title" value="{{name}}"></paper-input>
+			</section>
+			<section hero>
+				<div pad>
+					<h4>Match ALL of the following rules...</h4>
+					<template is="dom-repeat" items="{{formattedRules}}" as="group">
+						<div blackBorder roundedCorners pad style="margin-top: 12px">
+							<div row>
+								Match ANY of the following rules...
+								<paper-icon-button icon="icons:add-circle" on-tap="addRule" key="{{group.key}}"></paper-icon-button>
+							</div>
+							<div col>
+								<template is="dom-repeat" items="{{group.rules}}" as="item">
+									<rule-detail
+										id = {{item.id}}
+										rule-type = {{item.ruleType}}
+										rule = {{item.rule}}
+										greater = {{item.greater}}
+										playlist-id = {{item.playlistId}}
+										tagId = {{item.tagId}}
+									></rule-detail>
+								</template>
+							</div>
 						</div>
-						<div col>
-							<template is="dom-repeat" items="{{group.rules}}" as="item">
-								<rule-detail
-									id = {{item.id}}
-									rule-type = {{item.ruleType}}
-									rule = {{item.rule}}
-									greater = {{item.greater}}
-									playlist-id = {{item.playlistId}}
-									tagId = {{item.tagId}}
-								></rule-detail>
-							</template>
-						</div>
+					</template>
+					<div row flex pad>
+						<paper-button on-click="addRuleGroup" info raised>Add Rule Group</paper-button>
+						<paper-button on-click="savePlaylist" primary raised>Save Playlist</paper-button>
 					</div>
-				</template>
-				<div row flex>
-					<paper-button on-click="addRuleGroup" class="primary raised">Add Rule Group</paper-button>
-					<paper-button on-click="savePlaylist" class="primary raised">Save Playlist</paper-button>
 				</div>
-			</div>
+			</section>
+			<section>
+				<array-selector id="selector" items="{{libraryEntries}}" selected="{{filteredEntries}}" multi toggle></array-selector>
+				<iron-data-table items="{{filteredEntries}}" details-enabled style="height: 100%">
+					<template is="row-detail">
+						<library-entry-details
+							album="{{item.track.album}}"
+							album-art-link="{{item.track.albumArtLink}}"
+							artist="{{item.track.artist}}"
+							library-entry-id="{{item.id}}"
+							millisduration="{{item.millisduration}}"
+							play-count="{{item.playCount}}"
+							rating="{{item.rating}}"
+							title="{{item.track.title}}"
+							track-id="{{item.track.id}}"
+						></library-entry-details>
+					</template>
+					<data-table-column name="Title" sort-by="track.title" filter-by="track.title">
+						<template is="header">Title <paper-icon-button icon="search"></paper-icon-button></template>
+						<template>[[item.track.title]]</template>
+					</data-table-column>
+					<data-table-column name="Play Count" sort-by="playCount"><template>[[item.playCount]]</template></data-table-column>
+				</iron-data-table>
+				After Data Table
+			</section>
 		</div>
+
+
+
+		<!--https://www.webcomponents.org/element/vguillou/poly-filter/demo/demo/index.html-->
+
+
+
+
+		<!--<vaadin-grid id="vaadin-grid">
+      <table>
+        <colgroup>
+          <col name="track.title" sortable resizable>
+          <col name="track.artist" sortable resizable>
+					<col
+          <col name="playCount" sort="desc" sortable resizable>
+        </colgroup>
+      </table>
+    </vaadin-grid>-->
+
 	</template>
 </dom-module>
 

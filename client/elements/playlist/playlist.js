@@ -23,13 +23,17 @@
         notify: true,
         value: []
       },
+      libraryEntries: {
+        type: Array,
+        notify: true
+      },
+      filteredEntries: {
+        type: Array,
+        notify: true
+      },
       formattedRules: {
         source: "computed",
         computed: 'formatRules(rules.*)'
-      },
-      tracks: {
-        source: "computed",
-        computed: 'filterTracks(rules.*)'
       }
     },
     factoryImpl: function(id) {
@@ -91,20 +95,23 @@
       }
     },
     filterTracks: function(rules) {
-      var i, len, ret, rule;
+      var entries, entry, i, j, len, len1, rule;
       console.log("filtering");
-      ret = app.libraryEntries;
+      console.log(this.libraryEntries);
+      entries = this.libraryEntries;
       for (i = 0, len = rules.length; i < len; i++) {
         rule = rules[i];
-        console.log(rule);
-        console.log(this.filters[rule.ruleType]);
         if (this.filters[rule.ruleType] != null) {
-          ret = this.filters[rule.ruleType](ret, rule);
+          entries = this.filters[rule.ruleType](entries, rule);
         }
-        console.log(ret);
       }
-      console.log(ret);
-      return ret;
+      console.log(entries);
+      console.log(this.libraryEntries);
+      for (j = 0, len1 = entries.length; j < len1; j++) {
+        entry = entries[j];
+        this.$.selector.select(entry);
+      }
+      return console.log(this.filteredEntries);
     },
     filters: {
       rated: function(libraryEntries, rule) {
@@ -129,7 +136,7 @@
           ref = libraryEntry.tags;
           for (j = 0, len1 = ref.length; j < len1; j++) {
             tag = ref[j];
-            if (tag.id === rule.rule) {
+            if (tag.id + 0 === rule.rule + 0) {
               ret.push(libraryEntry);
             }
           }
@@ -139,17 +146,20 @@
       hasNot: function(libraryEntries, rule) {
         var i, j, len, len1, libraryEntry, ref, ret, select, tag;
         ret = [];
-        select = true;
         for (i = 0, len = libraryEntries.length; i < len; i++) {
           libraryEntry = libraryEntries[i];
+          select = true;
           ref = libraryEntry.tags;
           for (j = 0, len1 = ref.length; j < len1; j++) {
             tag = ref[j];
-            if (tag.id === rule.rule) {
+            console.log(libraryEntry.track.title + " - not tagged " + rule.rule + ", " + tag.id + " - " + tag.name);
+            if (tag.id + 0 === rule.rule + 0) {
+              console.log("excluded");
               select = false;
             }
           }
           if (select) {
+            console.log("including");
             ret.push(libraryEntry);
           }
         }

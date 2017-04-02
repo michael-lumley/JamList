@@ -24,11 +24,6 @@
       "model": "playlist",
       "foreignKey": ""
     },
-    "tag": {
-      "type": "belongsTo",
-      "model": "tag",
-      "foreignKey": ""
-    },
     "jlUser": {
       "type": "belongsTo",
       "model": "jlUser",

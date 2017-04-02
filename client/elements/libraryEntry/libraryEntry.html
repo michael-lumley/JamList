@@ -4,30 +4,32 @@
 <link rel="import" href="../paper-star-field/paper-star-field.html">
 
 <dom-module id="library-entry-details">
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
 	<style include="shared-styles"></style>
 	<style is="custom-style">
 		#albumArt {}
 	</style>
 
-	<template>
-		<div row flex>
-			<div col one>
-				<img id="albumArt" src="{{albumArtLink}}"></img>
-			</div>
-			<div col five>
-				<div row>
-					<div col>
-						<paper-input label="Title" style="width: 100%" value="{{title}}"></paper-input>
-						<paper-input label="Album" style="width: 100%" value="{{album}}"></paper-input>
-						<paper-input label="Artist" style="width: 100%" value="{{artist}}"></paper-input>
-					</div>
-					<div col>
-						<paper-input label="Play Count" style="width: 100%" value="{{playCount}}"></paper-input>
-						<paper-star-field yellow rate="{{rating}}"></paper-star-field>
+	<template flex>
+		<div col blackBorder pad roundedCorners style="height: auto; width: auto">
+			<div row flex>
+				<div col one>
+					<img id="albumArt" src="{{albumArtLink}}" style="max-width: 100%; display: block; height: auto"></img>
+				</div>
+				<div col five>
+					<div row>
+						<div col>
+							<paper-input label="Title" value="{{title}}"></paper-input>
+							<paper-input label="Album" value="{{album}}"></paper-input>
+							<paper-input label="Artist" value="{{artist}}"></paper-input>
+						</div>
+						<div col>
+							<paper-input label="Play Count" value="{{playCount}}"></paper-input>
+							<paper-star-field style="margin: 0 2vw" yellow rate="{{rating}}"></paper-star-field>
+							<paper-tags-input label="Tags" items="{{tags}}" label-accessor="name" style="width: 100%"></paper-tags-input>
+						</div>
 					</div>
 				</div>
-			<div col>
-				<paper-tags-input label="Tags" items="{{tags}}" style="width: 100%"></paper-tags-input>
 			</div>
 		</div>
 	</template>

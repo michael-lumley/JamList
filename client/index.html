@@ -1,3 +1,7 @@
+<link href="bower_components/polymer/polymer.html" rel="import">
+<link rel="import" href="bower_components/webcomponentsjs/webcomponents.min.js">
+<link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
+
 <script src="bower_components/plugin-portals/build/plugin-portals.js"></script>
 <script src="bower_components/underscore/underscore-min.js"></script>
 <script src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -8,5 +12,10 @@
 <link rel="import" href="elements/app/app.html">
 <link rel="import" href="style/dark-side/dark-side.html">
 <body>
+	<style>
+		body {
+			overflow-y: hidden;
+		}
+	</style>
 	<jamlist-app id="app"></jamlist-app>
 </body>

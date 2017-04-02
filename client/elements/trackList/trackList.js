@@ -1,6 +1,8 @@
 (function() {
   var polymerDefinition;
 
+  console.log("tracklistload");
+
   if (window.elements == null) {
     window.elements = {};
   }
@@ -8,12 +10,8 @@
   polymerDefinition = {
     is: "track-list",
     properties: {
-      activeTrack: {
-        type: Object
-      },
-      dataPath: {
-        type: String,
-        value: "libraryEntries"
+      data: {
+        type: Array
       }
     },
     listeners: {
@@ -28,50 +26,7 @@
       return console.log(this);
     },
     ready: function() {
-      var grid;
-      console.log("trackelemready");
-      console.log(app.libraryEntries);
-      grid = this.$["vaadin-grid"];
-      grid.items = app.libraryEntries;
-      grid.addEventListener('sort-order-changed', function() {
-        var sortDirection, sortOrder, sortProperty;
-        sortOrder = grid.sortOrder[0];
-        sortProperty = grid.columns[sortOrder.column].name;
-        sortDirection = sortOrder.direction;
-        return grid.items.sort(function(a, b) {
-          var field, i, len, path, res;
-          path = sortProperty.split('.');
-          for (i = 0, len = path.length; i < len; i++) {
-            field = path[i];
-            a = a[field];
-            b = b[field];
-          }
-          if (!isNaN(a)) {
-            res = parseInt(a, 10) - parseInt(b, 10);
-          } else {
-            res = a.localeCompare(b);
-          }
-          if (sortDirection === 'desc') {
-            res *= -1;
-          }
-          return res;
-        });
-      });
-      grid.addEventListener('selected-items-changed', (function(_this) {
-        return function() {
-          var item;
-          item = grid.selection.selected()[0];
-          if (item != null) {
-            return grid.getItem(item, function(err, item) {
-              if (err != null) {
-                app.fail(err);
-              }
-              return app.display.track(item);
-            });
-          }
-        };
-      })(this));
-      return console.log(grid.columns);
+      return console.log("trackelemready");
     },
     attached: function() {},
     _deleteConfirm: function(e) {

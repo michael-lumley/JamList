@@ -8,6 +8,7 @@
 <link href="../../style/shared-styles.html" rel="import">
 
 <dom-module id="rule-detail">
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
 	<style include="shared-styles"></style>
 	<style is="custom-style">	</style>
 	<template>
@@ -34,7 +35,7 @@
 			</template>
 			<template is="dom-if" if="{{ruleTypeIs('tag', ruleType)}}">
 				<paper-dropdown-menu label="Tag" selected="{{rule}}">
-					<paper-menu selected="{{tagId}}" attr-for-selected="id" class="dropdown-content">
+					<paper-menu selected="{{rule}}" attr-for-selected="id" class="dropdown-content">
 						<template is="dom-repeat" items="{{libraryTags()}}"><paper-item class="horizontal layout" id="{{item.id}}">{{item.name}}</paper-item></template>
 					</paper-menu>
 				</paper-dropdown-menu>
