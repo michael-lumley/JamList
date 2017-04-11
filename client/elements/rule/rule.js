@@ -32,8 +32,6 @@
       }
     },
     ruleTypeIs: function(display, ruleType) {
-      console.log(ruleType);
-      console.log(this.ruleType);
       if (display === "rated" && ruleType === "rated") {
         return true;
       } else if (display === "tag" && (ruleType === "has" || ruleType === "hasNot")) {
@@ -47,8 +45,6 @@
       }
     },
     dateDisplayIs: function(display, greater) {
-      console.log(display);
-      console.log(greater);
       if (display === "days" && greater === "0") {
         return true;
       } else if (display === "picker" && greater !== "0") {
@@ -58,27 +54,21 @@
       }
     },
     libraryTags: function() {
-      console.log("gettingTags");
-      console.log(app.tags);
       return app.tags;
+    },
+    deleteRule: function() {
+      console.log("delete");
+      return this.fire('ruleDelete', {
+        id: this.id
+      });
     }
   };
 
   window.elements.rule.detail = Polymer(_$.deepSafeExtend(window.elements.rule.base, {
     is: "rule-detail",
-    created: function() {
-      return console.log("playlistCreate");
-    },
-    ready: function() {
-      console.log("playlistReady");
-      return this.ruleType = "has";
-    },
-    attached: function() {
-      console.log("playlistAttach");
-      return console.log(this.rating);
-    }
+    created: function() {},
+    ready: function() {},
+    attached: function() {}
   }));
-
-  console.log("rule");
 
 }).call(this);

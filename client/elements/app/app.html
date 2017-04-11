@@ -1,9 +1,10 @@
 <link href="../trackList/trackList.html" rel="import">
 <link href="../playlistList/playlistList.html" rel="import">
-<link href="../libraryEntry/libraryEntry.html" rel="import">
+<link href="../tagList/tagList.html" rel="import">
+<link href="../track/track.html" rel="import">
 <link href="../playlist/playlist.html" rel="import">
 <link href="../rule/rule.html" rel="import">
-<link href="../playlist/playlist.html" rel="import">
+<link href="../tag/tag.html" rel="import">
 <link href="../tag-dropdown/tag-dropdown.html" rel="import">
 
 <link rel="import" href="../../style/shared-styles.html">
@@ -21,7 +22,9 @@
 <link href="../../bower_components/paper-datatable/paper-datatable.html" rel="import">
 <link href="../../bower_components/paper-tags/paper-tags.html">
 <link href="../../bower_components/iron-icons/iron-icons.html" rel="import">
+<link href="../../bower_components/paper-toast/paper-toast.html" rel="import">
 <link href="../../bower_components/iron-icons/av-icons.html" rel="import">
+<link href="../../bower_components/iron-icons/notification-icons.html" rel="import">
 <link href="../../bower_components/iron-icons/social-icons.html" rel="import">
 <script src="../../bower_components/webcomponentsjs/webcomponents.js"></script>
 <script src="../../bower_components/js-cookie/src/js.cookie.js"></script>
@@ -36,21 +39,26 @@
 				float: left;
 				margin-top: 0px;
 		}
-		#menu-fab {
-			float: left;
-			padding: 5px;
-			margin: 15px;
-		}
-
-		#errorDialog {
-			top: 10%;
-			--paper-dialog-background-color: #fadf46;
-			--paper-dialog: {
-				border-radius: 7px;
-				padding: 15px;
-			}
-		}
-
+		#menu-fab {<template is="row-detail">
+						<library-entry-details
+							album="{{item.track.album}}"
+							album-art-link="{{item.track.albumArtLink}}"
+							artist="{{item.track.artist}}"
+							library-entry-id="{{item.id}}"
+							millisduration="{{item.millisduration}}"
+							play-count="{{item.playCount}}"
+							rating="{{item.rating}}"
+							title="{{item.track.title}}"
+							track-id="{{item.track.id}}"
+							tags="{{item.tags}}"
+						></library-entry-details>
+					</template>
+					<data-table-column name="Title" sort-by="track.title" filter-by="track.title">
+						<template is="header">Title <paper-icon-button icon="search"></paper-icon-button></template>
+						<template>[[item.track.title]]</template>
+					</data-table-column>
+					<data-table-column name="Play Count" sort-by="playCount"><template>[[item.playCount]]</template></data-table-column>
+				</track-list>
 		#spinner-dialog {
 			border: 2px solid;
 			border-radius: 15px;
@@ -67,16 +75,22 @@
 					<paper-tab key="settings"><iron-icon icon="social:person"></iron-icon>&nbsp;Account</paper-tab>
 				</paper-tabs>
 
-				<iron-pages selected="{{path}}" attr-for-selected="key" style="padding-top: 7px">
+				<iron-pages selected="{{path}}" attr-for-selected="key">
 					<!--@fold-->
 					<div key="tracks">
-						<track-list data="{{libraryEntries}}"></track-list>
+						<div text-middle><h1>TRACKS</h1></div>
+						<track-list tracks="{{tracks}}"></track-list>
 					</div>
-					<div key="tags">TAGS</div>
+					<div key="tags">
+						<tag-list
+							tags="{{tags}}"
+							tracks="{{tracks}}"
+						></tag-list>
+					</div>
 					<div key="playlists">
 						<playlist-list
 							playlists="{{playlists}}"
-							library-entries="{{libraryEntries}}"
+							tracks="{{tracks}}"
 						></playlist-list>
 					</div>
 					<div key="settings">USER</div>
@@ -101,11 +115,9 @@
 		</iron-pages>
 
 		<!--@fold-->
+		<paper-toast id="toast"></paper-toast>
 		<paper-dialog id="spinner-dialog" modal>
 			<paper-spinner id="spinner"></paper-spinner>
-		</paper-dialog>
-		<paper-dialog id="trackDisplay" _interestedResizables="[]" with-backdrop style="width: 85%; max-height: 90%; height: 90%; overflow: hidden">
-				<div id="trackDisplayTarget" style="padding: 0px; margin: 0px; height: 100%"></div>
 		</paper-dialog>
 		<paper-dialog id="errorDialog" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
 			<div class="horizontal layout center center-justified" style="padding: 0px; margin: 0px; font-size:24px; padding-bottom: 6px">

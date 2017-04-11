@@ -1,0 +1,20 @@
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+
+<dom-module id="loopback-data-source">
+	<template>
+		<iron-ajax
+			auto
+			id="source"
+			method="get"
+			url="{{url}}"
+			handle-as="json"
+			on-response="handleResponse"
+			last-response="{{data}}"
+			params="{{params}}"
+		></iron-ajax>
+	</template>
+
+</dom-module>
+
+<script src="loopback-data-source.js"></script>

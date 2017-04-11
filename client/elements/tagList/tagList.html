@@ -1,8 +1,8 @@
 <link rel="import" href="../../style/shared-styles.html">
+<link href="../tag/tag.html" rel="import">
+<link href="../trackList/trackList.html" rel="import">
 
-<!--https://vaadin.com/elements/-/element/vaadin-grid-->
-
-<dom-module id="playlist-list">
+<dom-module id="tag-list">
 	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
 	<style include="shared-styles"></style>
   <style></style>
@@ -10,24 +10,23 @@
   <template>
 		<div flex row>
 			<div flex one>
-				<paper-menu selected="{{activeList}}" attr-for-selected="key" style="height: 100%; width: 100%">
-					<paper-button marg success flex on-click="syncAllPlaylists"><iron-icon icon="notification:sync"></iron-icon> Sync All</paper-button>
-					<paper-button marg outline flex on-click="addPlaylist"><iron-icon icon="icons:add"></iron-icon> Add New Playlist</paper-button>
-					<template is="dom-repeat" items="{{playlists}}">
+				<paper-menu selected="{{activeTag}}" attr-for-selected="key" style="height: 100%; width: 100%; overflow:auto">
+					<template is="dom-repeat" items="{{tags}}" sort="sortFunction">
 						<paper-item key="[[item.id]]">[[item.name]]</paper-item>
 					</template>
 				</paper-menu>
 			</div>
 			<div flex five>
-				<iron-pages selected="{{activeList}}" attr-for-selected="key">
-					<template is="dom-repeat" items="{{playlists}}">
+				<iron-pages selected="{{activeTag}}" attr-for-selected="key">
+					<template is="dom-repeat" items="{{tags}}">
 						<div key="[[item.id]]">
-							<playlist-detail
+							<tag-detail
 								id="{{item.id}}"
-								rules="{{item.rules}}"
 								name="{{item.name}}"
+								jl-user-id = "{{item.jlUserId}}"
 								tracks="{{tracks}}"
-							></playlist-detail>
+								tags="{{tags}}"
+							></tag-detail>
 						</div>
 					</template>
 				</iron-pages>
@@ -52,4 +51,4 @@
 	</template>
 </dom-module>
 
-<script src="playlistList.js"></script>
+<script src="tagList.js"></script>

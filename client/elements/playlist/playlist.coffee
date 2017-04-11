@@ -4,26 +4,35 @@ window.elements.playlist.base = {
 	properties:
 		id:
 			type: Number
-			source: "ID"
 		name:
 			type: String
-			source: "playlist"
 			notify: true
 			value: "New Playlist"
+		collapseRules:
+			type: Boolean
+			notify: true
+			value: false
 		rules:
 			type: Array
-			source: "playlist"
 			notify: true
 			value: []
-		libraryEntries:
+		tracks:
 			type: Array
 			notify: true
 		filteredEntries:
 			type: Array
 			notify: true
 		formattedRules:
-			source: "computed"
 			computed: 'formatRules(rules.*)'
+	listeners:
+		ruleDelete: "deleteRule"
+		toggleRules: "toggleRules"
+	observers: [
+		"playlistLevelObserver(name)"
+	]
+	# !fold
+	playlistLevelObserver: (changeRecord)=>
+		console.log app.convertChangeRecord(changeRecord)
 
 	#@fold Polymer Inits
 	factoryImpl: (id)->
@@ -36,12 +45,26 @@ window.elements.playlist.base = {
 	#@fold Data Funcs
 	addRule: (e)->
 		@push("rules", {group: e.target.parentElement.key})
+	deleteRule: (e)->
+		console.log e.detail.id
+		index = _.findIndex(@rules, (item)->
+			_$.intEqual(item.id, e.detail.id)
+		)
+		app.xhr(
+			method: "DELETE"
+			url: "http://#{app.urlBase}:3000/api/Rules/#{e.detail.id}"
+		).then(()=>
+			@splice('rules', index, 1)
+		)
 	addRuleGroup: ()->
 		if @formattedRules.length > 0
 			key = @formattedRules[@formattedRules.length-1].key + 1
 		else
 			key = 0
 		@push("rules", {group: key})
+	toggleRules: ()->
+		@$.rulesExpand.toggleAttribute("rotate")
+		@$.rulesCollapse.toggle()
 	#!fold
 
 	#@fold Coumputers
@@ -51,11 +74,10 @@ window.elements.playlist.base = {
 		if rules?
 			for rule in rules.base
 				@validateRule(rule)
-				map[rule.group] = [] if !map[rule.group]?
-				map[rule.group].push(rule)
+				map[Number(rule.group)] = [] if !map[Number(rule.group)]?
+				map[Number(rule.group)].push(rule)
 			for key, group of map
-				ret.push({key: key, rules: group})
-		console.log ret
+				ret.push({key: Number(key), rules: group})
 		return ret
 	#!fold
 
@@ -65,16 +87,16 @@ window.elements.playlist.base = {
 
 	#@fold-children Filtering
 	filterTracks: (rules)->
-		console.log "filtering"
-		console.log @libraryEntries
-		entries = @libraryEntries
-		for rule in rules
-			entries = @filters[rule.ruleType](entries, rule) if @filters[rule.ruleType]?
-		console.log entries
-		console.log @libraryEntries
-		for entry in entries
-			this.$.selector.select(entry)
-		console.log @filteredEntries
+		remaining = @tracks
+		for group in @formattedRules
+			passingTracks = []
+			for rule in group.rules
+				if @filters[rule.ruleType]?
+					ent = @filters[rule.ruleType](remaining, rule)
+					passingTracks = passingEntries.concat(ent)
+			remaining = _.uniq(passingEntries)
+		for track in remaining
+			@$.selector.select(track)
 	filters:
 		rated: (libraryEntries, rule)->
 			ret = []
@@ -89,16 +111,19 @@ window.elements.playlist.base = {
 			ret = []
 			for libraryEntry in libraryEntries
 				for tag in libraryEntry.tags
-					if tag.id + 0 == rule.rule + 0
+					#console.log "#{libraryEntry.track.title} - tagged #{rule.rule}, #{tag.id} - #{tag.name}"
+					if _$.intEqual(tag.id, rule.rule)
+						console.log "including"
 						ret.push(libraryEntry)
+						break
 			return ret
 		hasNot: (libraryEntries, rule)->
 			ret = []
 			for libraryEntry in libraryEntries
 				select = true
 				for tag in libraryEntry.tags
-					console.log "#{libraryEntry.track.title} - not tagged #{rule.rule}, #{tag.id} - #{tag.name}"
-					if tag.id + 0 == rule.rule + 0
+					#console.log "#{libraryEntry.track.title} - not tagged #{rule.rule}, #{tag.id} - #{tag.name}"
+					if _$.intEqual(tag.id, rule.rule)
 						console.log "excluded"
 						select = false
 				if select
@@ -108,11 +133,9 @@ window.elements.playlist.base = {
 		playcount: (libraryEntries, rule)->
 			ret = []
 			for libraryEntry in libraryEntries
-				console.log "#{rule.greater}: #{libraryEntry.playCount} - #{rule.rule}"
-				if rule.greater and libraryEntry.playCount >= rule.rule
+				if rule.greater > 0 and libraryEntry.playCount >= rule.rule
 					ret.push(libraryEntry)
-				else if !rule.greater and libraryEntry.playCount <= rule.rule
-					console.log push
+				else if rule.greater < 0 and libraryEntry.playCount <= rule.rule
 					ret.push(libraryEntry)
 			return ret
 		added: (libraryEntries, rule)->
@@ -156,12 +179,9 @@ window.elements.playlist.base = {
 window.elements.playlist.detail = Polymer(_$.deepSafeExtend(window.elements.playlist.base, {
 	is: "playlist-detail"
 	created: ()->
-		console.log "playlistCreate"
 	ready: ()->
-		console.log "playlistReady"
+		@filterTracks()
 	attached: ()->
-		console.log "playlistAttach"
-		console.log @rating
 }))
 
 console.log "playlist"

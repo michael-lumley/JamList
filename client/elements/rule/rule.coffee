@@ -22,8 +22,6 @@ window.elements.rule.base = {
 
 	#@fold Polymer Display Selectors
 	ruleTypeIs: (display, ruleType)-> #Polymer helper to determine which sub view to show
-		console.log ruleType
-		console.log @ruleType
 		if display == "rated" and ruleType == "rated"
 			return true
 		else if display == "tag" and (ruleType == "has" or ruleType == "hasNot")
@@ -35,8 +33,6 @@ window.elements.rule.base = {
 		else
 			return false
 	dateDisplayIs: (display, greater)-> #Polymer helper to determine which date input to show, compares
-		console.log display
-		console.log greater
 		if display == "days" and greater == "0" # If greater == 0, we have a "within last X days" rule
 			return true
 		else if display == "picker" and greater != "0"
@@ -44,9 +40,10 @@ window.elements.rule.base = {
 		else
 			return false
 	libraryTags: ()->
-		console.log "gettingTags"
-		console.log app.tags
 		return app.tags
+	deleteRule: ()->
+		console.log "delete"
+		@fire('ruleDelete', {id: @id})
 	#!fold
 
 }
@@ -54,13 +51,6 @@ window.elements.rule.base = {
 window.elements.rule.detail =  Polymer(_$.deepSafeExtend(window.elements.rule.base, {
 	is: "rule-detail"
 	created: ()->
-		console.log "playlistCreate"
 	ready: ()->
-		console.log "playlistReady"
-		@ruleType = "has"
 	attached: ()->
-		console.log "playlistAttach"
-		console.log @rating
 }))
-
-console.log "rule"

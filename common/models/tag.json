@@ -11,9 +11,9 @@
   },
   "validations": [],
   "relations": {
-    "libraryEntries": {
+    "tracks": {
       "type": "hasAndBelongsToMany",
-      "model": "libraryEntry"
+      "model": "track"
     },
     "jlUser": {
       "type": "belongsTo",

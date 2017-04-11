@@ -1,6 +1,7 @@
 <link rel="import" href="../../style/shared-styles.html">
 
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
 <link rel="import" href="../rule/rule.html">
@@ -17,15 +18,18 @@
 				<paper-input label="Title" value="{{name}}"></paper-input>
 			</section>
 			<section hero>
-				<div pad>
-					<h4>Match ALL of the following rules...</h4>
-					<template is="dom-repeat" items="{{formattedRules}}" as="group">
-						<div blackBorder roundedCorners pad style="margin-top: 12px">
-							<div row>
-								Match ANY of the following rules...
-								<paper-icon-button icon="icons:add-circle" on-tap="addRule" key="{{group.key}}"></paper-icon-button>
-							</div>
-							<div col>
+				<div row center>
+					<h4>[[filteredEntries.length]] tracks match [[rules.length]] Rules...</h4>
+					<paper-icon-button id="rulesExpand" animate rotate icon="icons:expand-less" on-tap="toggleRules"></paper-icon-button>
+				</div>
+				<iron-collapse id="rulesCollapse">
+					<div style="max-height: 33%; overflow-y:auto">
+						<template is="dom-repeat" items="{{formattedRules}}" as="group">
+							<div blackBorder roundedCorners pad style="margin: 6px">
+								<div row>
+									Match ANY of the following rules...
+									<paper-icon-button icon="icons:add-circle" on-tap="addRule" key="{{group.key}}"></paper-icon-button>
+								</div>
 								<template is="dom-repeat" items="{{group.rules}}" as="item">
 									<rule-detail
 										id = {{item.id}}
@@ -37,58 +41,40 @@
 									></rule-detail>
 								</template>
 							</div>
-						</div>
-					</template>
+						</template>
+					</div>
 					<div row flex pad>
 						<paper-button on-click="addRuleGroup" info raised>Add Rule Group</paper-button>
 						<paper-button on-click="savePlaylist" primary raised>Save Playlist</paper-button>
 					</div>
-				</div>
+				</iron-collapse>
 			</section>
 			<section>
-				<array-selector id="selector" items="{{libraryEntries}}" selected="{{filteredEntries}}" multi toggle></array-selector>
+				<array-selector id="selector" items="{{tracks}}" selected="{{filteredEntries}}" multi toggle></array-selector>
 				<iron-data-table items="{{filteredEntries}}" details-enabled style="height: 100%">
 					<template is="row-detail">
-						<library-entry-details
-							album="{{item.track.album}}"
-							album-art-link="{{item.track.albumArtLink}}"
-							artist="{{item.track.artist}}"
+						<track-details
+							album="{{item.album}}"
+							album-art-link="{{item.albumArtLink}}"
+							artist="{{item.artist}}"
 							library-entry-id="{{item.id}}"
 							millisduration="{{item.millisduration}}"
 							play-count="{{item.playCount}}"
 							rating="{{item.rating}}"
-							title="{{item.track.title}}"
-							track-id="{{item.track.id}}"
-						></library-entry-details>
+							title="{{item.title}}"
+							track-id="{{item.id}}"
+							tags="{{item.tags}}"
+						></track-details>
 					</template>
-					<data-table-column name="Title" sort-by="track.title" filter-by="track.title">
+					<data-table-column name="Title" sort-by="title" filter-by="title">
 						<template is="header">Title <paper-icon-button icon="search"></paper-icon-button></template>
-						<template>[[item.track.title]]</template>
+						<template>[[item.title]]</template>
 					</data-table-column>
 					<data-table-column name="Play Count" sort-by="playCount"><template>[[item.playCount]]</template></data-table-column>
 				</iron-data-table>
 				After Data Table
 			</section>
 		</div>
-
-
-
-		<!--https://www.webcomponents.org/element/vguillou/poly-filter/demo/demo/index.html-->
-
-
-
-
-		<!--<vaadin-grid id="vaadin-grid">
-      <table>
-        <colgroup>
-          <col name="track.title" sortable resizable>
-          <col name="track.artist" sortable resizable>
-					<col
-          <col name="playCount" sort="desc" sortable resizable>
-        </colgroup>
-      </table>
-    </vaadin-grid>-->
-
 	</template>
 </dom-module>
 

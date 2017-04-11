@@ -10,8 +10,9 @@
   polymerDefinition = {
     is: "track-list",
     properties: {
-      data: {
-        type: Array
+      tracks: {
+        type: Array,
+        notify: true
       }
     },
     listeners: {
@@ -21,22 +22,19 @@
       '_generateDWIVideoRequest': '_generateDWIVideoRequest',
       '_fill911': '_fill911'
     },
-    created: function() {
-      console.log("listelemcreate");
-      return console.log(this);
-    },
+    created: function() {},
     ready: function() {
-      return console.log("trackelemready");
+      var expandedItem, table;
+      table = this.$.table;
+      expandedItem = {};
+      table.addEventListener('expanding-item', function(e) {
+        if (expandedItem !== {}) {
+          table.collapseItem(expandedItem);
+        }
+        return expandedItem = e.detail.item;
+      });
     },
-    attached: function() {},
-    _deleteConfirm: function(e) {
-      console.log(e);
-      console.log(e.srcElement.id);
-      this.activeCase = app.get("case", e.srcElement.eid);
-      console.log("deleteConfirm");
-      console.log(this.activeCase);
-      return this.$.confirmDelete.open();
-    }
+    attached: function() {}
   };
 
   window.elements.trackList = Polymer(polymerDefinition);

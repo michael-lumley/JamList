@@ -14,7 +14,7 @@
         type: Array,
         notify: true
       },
-      libraryEntries: {
+      tracks: {
         type: Array,
         notify: true
       }
@@ -30,27 +30,26 @@
       console.log("listelemcreate");
       return console.log(this);
     },
-    ready: function() {
-      return console.log(this.libraryEntries);
-
-      /*
-      		list = @.$.playlistList
-      		list.addEventListener('expanding-item', (e)=>
-      			expandedItem = e.detail.item
-      			@async(()=>
-      				item = document.getElementById("Playlist" + expandedItem.id)
-      				console.log item
-      				item.addEventListener('iron-overlay-closed', (e)=>
-      					list.collapseItem(expandedItem) #need to collapseItem so that the next click isn't a 'close' event on the detail
-      				)
-      				item.fitInto = window
-      				item.resetFit()
-      				item.open()
-      			, "50")
-      		)
-       */
-    },
-    attached: function() {}
+    ready: function() {},
+    attached: function() {},
+    addPlaylist: function() {
+      return app.xhr({
+        method: "POST",
+        url: "http://" + app.urlBase + ":3000/api/playlists",
+        data: {
+          name: "New Playlist"
+        }
+      }).then((function(_this) {
+        return function(data) {
+          _this.push("playlists", {
+            name: data.name,
+            rules: [],
+            id: data.id
+          });
+          return _this.activeList = data.id;
+        };
+      })(this));
+    }
   };
 
   window.elements.trackList = Polymer(polymerDefinition);

@@ -26,9 +26,9 @@
       "model": "tag",
       "foreignKey": ""
     },
-    "libraryEntries": {
+    "tracks": {
       "type": "hasMany",
-      "model": "libraryEntry",
+      "model": "track",
       "foreignKey": ""
     }
   },

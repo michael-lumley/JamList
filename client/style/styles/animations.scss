@@ -1,0 +1,7 @@
+[animate] {
+	transition: transform .5s cubic-bezier(.44, 0, .2, 1);
+}
+
+[rotate] {
+	transform: rotate(180deg);
+}

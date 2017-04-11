@@ -1,0 +1,50 @@
+<link href="bower_components/polymer/polymer.html" rel="import">
+<link rel="import" href="bower_components/webcomponentsjs/webcomponents.min.js">
+<link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
+
+<script src="bower_components/plugin-portals/build/plugin-portals.js"></script>
+<script src="bower_components/underscore/underscore-min.js"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/querystring/querystring.min.js"></script>
+<script src="bower_components/morslamina-utility/build/utility.js"></script>
+
+<link href="bower_components/polymer/polymer.html" rel="import">
+<link rel="import" href="elements/loopback-data-source/loopback-data-source.html">
+<link rel="import" href="style/dark-side/dark-side.html">
+<body>
+	<style>
+		body {
+			overflow-y: hidden;
+		}
+	</style>
+	<loopback-data-source
+		id="track-data"
+		url-base="tracks"
+		url-root="localhost:3000/api"
+		where='{"jlUserId": "lumleym"}'
+		include='{"relation": "tags"}'
+		has-many='[]'
+		has-belongs-many='["tags"]'
+	></loopback-data-source>
+
+	<script>
+		setTimeout(function(){
+			source = document.getElementById("track-data");
+			console.log(source.data)
+			ID2 = source.getItemBySQLId(2)
+			key2 = source.getItemByPolymerKey("#2")
+
+			source.set("data.#2.artist", "n")
+			source.set("data.#2.artist", "ne")
+			source.set("data.#2.artist", "new")
+			source.set("data.#2.artist", "newI")
+			source.set("data.#2.artist", "newIn")
+			source.set("data.#2.artist", "newInf")
+			source.set("data.#2.artist", "newInfo")
+			source.set("data.#2.millisduration", "34562324")
+			source.push("data." + source.getIndexBySQLId(6) + ".tags", "testtag")
+			console.log(ID2);
+		}, "1500")
+
+	</script>
+</body>

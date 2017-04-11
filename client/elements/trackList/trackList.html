@@ -1,4 +1,4 @@
-<link href="../../bower_components/vaadin-grid/vaadin-grid.html" rel="import">
+<link href="../track/track.html" rel="import">
 <link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
 <link rel="import" href="../../style/shared-styles.html">
 
@@ -10,27 +10,26 @@
   <style></style>
 
   <template>
-		<div text-middle><h1>TRACKS</h1></div>
-		<iron-data-table items="[[data]]" details-enabled style="height: 100%" sort-order='[{"direction": "desc", "path":"playCount"}]'>
+		<iron-data-table id="table" items="{{tracks}}" details-enabled style="height: 100%" sort-order='[{"direction": "desc", "path":"playCount"}]'>
 			<template is="row-detail">
 				<div style="width: 100%; box-sizing: border-box; -webkit-box-sizing: border-box; -moz-box-sizing: border-box">
-					<library-entry-details
-						album="{{item.track.album}}"
-						album-art-link="{{item.track.albumArtLink}}"
-						artist="{{item.track.artist}}"
+					<track-details
+						album="{{item.album}}"
+						album-art-link="{{item.albumArtLink}}"
+						artist="{{item.artist}}"
 						library-entry-id="{{item.id}}"
 						millisduration="{{item.millisduration}}"
 						play-count="{{item.playCount}}"
 						rating="{{item.rating}}"
-						title="{{item.track.title}}"
-						track-id="{{item.track.id}}"
+						title="{{item.title}}"
+						track-id="{{item.id}}"
 						tags="{{item.tags}}"
-					></library-entry-details>
+					></track-details>
 				</div>
 			</template>
-			<data-table-column name="Title" sort-by="track.title" filter-by="track.title" flex="3"><template>[[item.track.title]]</template></data-table-column>
-			<data-table-column name="Artist" sort-by="track.artist" filter-by="track.artist" flex="3"><template>[[item.track.artist]]</template></data-table-column>
-			<data-table-column name="Album" sort-by="track.album" filter-by="track.album" flex="3"><template>[[item.track.album]]</template></data-table-column>
+			<data-table-column name="Title" sort-by="title" filter-by="title" flex="3"><template>[[item.title]]</template></data-table-column>
+			<data-table-column name="Artist" sort-by="artist" filter-by="artist" flex="3"><template>[[item.artist]]</template></data-table-column>
+			<data-table-column name="Album" sort-by="album" filter-by="album" flex="3"><template>[[item.album]]</template></data-table-column>
 			<data-table-column name="Play Count" sort-by="playCount" flex="1"><template>[[item.playCount]]</template></data-table-column>
 		</iron-data-table>
 	</template>

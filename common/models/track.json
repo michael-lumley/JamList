@@ -24,13 +24,41 @@
 		},
 		"albumArtLink": {
 			"type": "string"
-		}
+		},
+		"playCount": {
+      "type": "number"
+    },
+    "sortDate": {
+      "type": "number"
+    },
+    "rating": {
+      "type": "number",
+      "dataType": "float",
+      "precision": 2,
+      "scale": 1
+    },
+    "recentTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    },
+    "lastModifiedTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    },
+    "creationTimestamp": {
+      "type": "number",
+      "dataType": "bigint"
+    }
   },
   "validations": [],
   "relations": {
-    "libraryEntries": {
-      "type": "hasMany",
-      "model": "libraryEntry",
+		"tags": {
+      "type": "hasAndBelongsToMany",
+      "model": "tag"
+    },
+    "jlUser": {
+      "type": "belongsTo",
+      "model": "jlUser",
       "foreignKey": ""
     }
   },

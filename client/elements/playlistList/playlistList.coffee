@@ -8,7 +8,7 @@ polymerDefinition = {
 		playlists:
 			type: Array
 			notify: true
-		libraryEntries:
+		tracks:
 			type: Array
 			notify: true
 	listeners:
@@ -24,24 +24,23 @@ polymerDefinition = {
 		console.log "listelemcreate"
 		console.log @
 	ready: ()->			 # Create Filters; Row Style Func
-		console.log @libraryEntries
-		###
-		list = @.$.playlistList
-		list.addEventListener('expanding-item', (e)=>
-			expandedItem = e.detail.item
-			@async(()=>
-				item = document.getElementById("Playlist" + expandedItem.id)
-				console.log item
-				item.addEventListener('iron-overlay-closed', (e)=>
-					list.collapseItem(expandedItem) #need to collapseItem so that the next click isn't a 'close' event on the detail
-				)
-				item.fitInto = window
-				item.resetFit()
-				item.open()
-			, "50")
-		)
-		###
 	attached: ()->
+
+	addPlaylist: ()->
+		app.xhr({
+			method: "POST"
+			url: "http://#{app.urlBase}:3000/api/playlists"
+			data:
+				name: "New Playlist"
+		}).then((data)=>
+			@push("playlists", {
+				name: data.name
+				rules: []
+				id: data.id
+			})
+			@activeList = data.id
+		)
+
 	# !fold
 
 	# Event Functions @fold

@@ -16,11 +16,6 @@
       "model": "rule",
       "foreignKey": ""
     },
-    "libraryEntries": {
-      "type": "hasAndBelongsToMany",
-      "model": "libraryEntry",
-      "foreignKey": ""
-    },
     "jlUser": {
       "type": "belongsTo",
       "model": "jlUser",

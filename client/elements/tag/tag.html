@@ -1,0 +1,58 @@
+<link rel="import" href="../../style/shared-styles.html">
+
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/array-filter/array-filter.html">
+<link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
+<link rel="import" href="../rule/rule.html">
+
+<dom-module id="tag-detail">
+	<link rel="import" href="../../style/dark-side/dark-side.css" type="css">
+	<style include="shared-styles"></style>
+	<style is="custom-style"></style>
+
+	<template>
+		<div col flex>
+			<section>
+				<div col flex>
+					<div text-middle><h3>{{name}}</h3></div>
+					<paper-input label="Title" value="{{name}}"></paper-input>
+					<div row flex style="margin: 10px">
+						<paper-button on-click="merge" raised primary>Merge and Keep</paper-button>
+						<paper-button on-click="mergedelete" raised primary>Merge and Delete</paper-button>
+						<paper-button on-click="delete" raised primary>Delete</paper-button>
+					</div>
+				</div>
+			</section>
+			<section>
+				<array-filter
+					id="selector"
+					filter="_filterTracks"
+					observe="tags"
+					items="{{tracks}}"
+					filtered="{{filteredEntries}}"
+				></array-filter>
+				<track-list
+					tracks="{{filteredEntries}}"
+				></track-list>
+			</section>
+		</div>
+		<paper-dialog id="merge">
+			Merge into
+			<paper-dropdown-menu >
+				<paper-menu class="dropdown-content" selected="{{mergeTagId}}" attr-for-selected="id">
+					<template is="dom-repeat" items={{tags}}>
+						<paper-item id="{{item.id}}">{{item.name}}</paper-item>
+					</template>
+				</paper-menu>
+			</paper-dropdown-menu>
+			<paper-item class="bar horizontal layout end-justified">
+	    	<paper-button id="confirmButton" class="pinkButton">Continue</paper-button>
+	    	<paper-button id="rejectButton" dialog-dismiss>Cancel</paper-button>
+	    </paper-item>
+		</paper-dialog>
+	</template>
+</dom-module>
+
+<script src="tag.js"></script>

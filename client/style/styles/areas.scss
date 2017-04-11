@@ -24,10 +24,10 @@ div[bottomRoundedInterior] {
   border-bottom-left-radius: 9px;
   border-bottom-right-radius: 9px;
 }
-div[pad] {
+[pad] {
   padding: 12px;
 }
-div[marg] {
+[marg] {
 	margin: 12px;
 }
 
@@ -40,7 +40,6 @@ div[text-right]{
 div[text-middle]{
 	text-align: center;
 }
-
 
 div[shadow] {
 	box-shadow: 2px 2px 4px #ccc;

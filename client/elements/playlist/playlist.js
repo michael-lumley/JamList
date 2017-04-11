@@ -8,22 +8,24 @@
   window.elements.playlist.base = {
     properties: {
       id: {
-        type: Number,
-        source: "ID"
+        type: Number
       },
       name: {
         type: String,
-        source: "playlist",
         notify: true,
         value: "New Playlist"
       },
+      collapseRules: {
+        type: Boolean,
+        notify: true,
+        value: false
+      },
       rules: {
         type: Array,
-        source: "playlist",
         notify: true,
         value: []
       },
-      libraryEntries: {
+      tracks: {
         type: Array,
         notify: true
       },
@@ -32,10 +34,19 @@
         notify: true
       },
       formattedRules: {
-        source: "computed",
         computed: 'formatRules(rules.*)'
       }
     },
+    listeners: {
+      ruleDelete: "deleteRule",
+      toggleRules: "toggleRules"
+    },
+    observers: ["playlistLevelObserver(name)"],
+    playlistLevelObserver: (function(_this) {
+      return function(changeRecord) {
+        return console.log(app.convertChangeRecord(changeRecord));
+      };
+    })(this),
     factoryImpl: function(id) {
       var key, playlistData, property, results;
       if (id != null) {
@@ -53,6 +64,21 @@
         group: e.target.parentElement.key
       });
     },
+    deleteRule: function(e) {
+      var index;
+      console.log(e.detail.id);
+      index = _.findIndex(this.rules, function(item) {
+        return _$.intEqual(item.id, e.detail.id);
+      });
+      return app.xhr({
+        method: "DELETE",
+        url: "http://" + app.urlBase + ":3000/api/Rules/" + e.detail.id
+      }).then((function(_this) {
+        return function() {
+          return _this.splice('rules', index, 1);
+        };
+      })(this));
+    },
     addRuleGroup: function() {
       var key;
       if (this.formattedRules.length > 0) {
@@ -64,6 +90,10 @@
         group: key
       });
     },
+    toggleRules: function() {
+      this.$.rulesExpand.toggleAttribute("rotate");
+      return this.$.rulesCollapse.toggle();
+    },
     formatRules: function(rules) {
       var group, i, key, len, map, ref, ret, rule;
       map = {};
@@ -73,20 +103,19 @@
         for (i = 0, len = ref.length; i < len; i++) {
           rule = ref[i];
           this.validateRule(rule);
-          if (map[rule.group] == null) {
-            map[rule.group] = [];
+          if (map[Number(rule.group)] == null) {
+            map[Number(rule.group)] = [];
           }
-          map[rule.group].push(rule);
+          map[Number(rule.group)].push(rule);
         }
         for (key in map) {
           group = map[key];
           ret.push({
-            key: key,
+            key: Number(key),
             rules: group
           });
         }
       }
-      console.log(ret);
       return ret;
     },
     validateRule: function(rule) {
@@ -95,23 +124,28 @@
       }
     },
     filterTracks: function(rules) {
-      var entries, entry, i, j, len, len1, rule;
-      console.log("filtering");
-      console.log(this.libraryEntries);
-      entries = this.libraryEntries;
-      for (i = 0, len = rules.length; i < len; i++) {
-        rule = rules[i];
-        if (this.filters[rule.ruleType] != null) {
-          entries = this.filters[rule.ruleType](entries, rule);
+      var ent, group, i, j, k, len, len1, len2, passingTracks, ref, ref1, remaining, results, rule, track;
+      remaining = this.tracks;
+      ref = this.formattedRules;
+      for (i = 0, len = ref.length; i < len; i++) {
+        group = ref[i];
+        passingTracks = [];
+        ref1 = group.rules;
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          rule = ref1[j];
+          if (this.filters[rule.ruleType] != null) {
+            ent = this.filters[rule.ruleType](remaining, rule);
+            passingTracks = passingEntries.concat(ent);
+          }
         }
+        remaining = _.uniq(passingEntries);
       }
-      console.log(entries);
-      console.log(this.libraryEntries);
-      for (j = 0, len1 = entries.length; j < len1; j++) {
-        entry = entries[j];
-        this.$.selector.select(entry);
+      results = [];
+      for (k = 0, len2 = remaining.length; k < len2; k++) {
+        track = remaining[k];
+        results.push(this.$.selector.select(track));
       }
-      return console.log(this.filteredEntries);
+      return results;
     },
     filters: {
       rated: function(libraryEntries, rule) {
@@ -136,8 +170,10 @@
           ref = libraryEntry.tags;
           for (j = 0, len1 = ref.length; j < len1; j++) {
             tag = ref[j];
-            if (tag.id + 0 === rule.rule + 0) {
+            if (_$.intEqual(tag.id, rule.rule)) {
+              console.log("including");
               ret.push(libraryEntry);
+              break;
             }
           }
         }
@@ -152,8 +188,7 @@
           ref = libraryEntry.tags;
           for (j = 0, len1 = ref.length; j < len1; j++) {
             tag = ref[j];
-            console.log(libraryEntry.track.title + " - not tagged " + rule.rule + ", " + tag.id + " - " + tag.name);
-            if (tag.id + 0 === rule.rule + 0) {
+            if (_$.intEqual(tag.id, rule.rule)) {
               console.log("excluded");
               select = false;
             }
@@ -170,11 +205,9 @@
         ret = [];
         for (i = 0, len = libraryEntries.length; i < len; i++) {
           libraryEntry = libraryEntries[i];
-          console.log(rule.greater + ": " + libraryEntry.playCount + " - " + rule.rule);
-          if (rule.greater && libraryEntry.playCount >= rule.rule) {
+          if (rule.greater > 0 && libraryEntry.playCount >= rule.rule) {
             ret.push(libraryEntry);
-          } else if (!rule.greater && libraryEntry.playCount <= rule.rule) {
-            console.log(push);
+          } else if (rule.greater < 0 && libraryEntry.playCount <= rule.rule) {
             ret.push(libraryEntry);
           }
         }
@@ -240,16 +273,11 @@
 
   window.elements.playlist.detail = Polymer(_$.deepSafeExtend(window.elements.playlist.base, {
     is: "playlist-detail",
-    created: function() {
-      return console.log("playlistCreate");
-    },
+    created: function() {},
     ready: function() {
-      return console.log("playlistReady");
+      return this.filterTracks();
     },
-    attached: function() {
-      console.log("playlistAttach");
-      return console.log(this.rating);
-    }
+    attached: function() {}
   }));
 
   console.log("playlist");

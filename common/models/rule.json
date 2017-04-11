@@ -11,7 +11,7 @@
       "type": "number"
     },
     "greater": {
-      "type": "boolean"
+      "type": "number"
     },
 		"group": {
 			"type": "number"

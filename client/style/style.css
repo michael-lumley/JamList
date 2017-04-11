@@ -29,11 +29,11 @@ div[bottomRoundedInterior] {
   border-bottom-right-radius: 9px;
 }
 
-div[pad] {
+[pad] {
   padding: 12px;
 }
 
-div[marg] {
+[marg] {
   margin: 12px;
 }
 
@@ -490,3 +490,14 @@ paper-tooltip {
 }
 
 /* !fold */
+[animate] {
+  transition: transform 0.5s cubic-bezier(0.44, 0, 0.2, 1);
+}
+
+[rotate] {
+  transform: rotate(180deg);
+}
+
+[outline] {
+  border: 2px solid;
+}

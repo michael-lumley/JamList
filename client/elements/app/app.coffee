@@ -4,14 +4,15 @@ window.elements.app = Polymer(
 	is: "jamlist-app"
 	# Polymer Inits @fold-children
 	properties:
-		libraryEntries:
-			type: Array
-		#Set to true when message recieved from Play Music that a user has been loaded into the app
 		playerActive:
 			type: Boolean
 			value: false
 		playlists:
 			type: Array
+			notify: true
+		tracks:
+			type: Array
+			notify: true
 		queue:
 			type: Object
 			value: {}
@@ -20,6 +21,7 @@ window.elements.app = Polymer(
 			value: false
 		tags:
 			type: Array
+			notify: true
 		tokens:
 			type: Array
 		urlBase:
@@ -31,7 +33,61 @@ window.elements.app = Polymer(
 				return {login: {username: "", password: ""}, google: {}, jamlist: {}, deferred: $.Deferred()}
 	listeners:
 		'close-case': 'closeCase'
+	###
+	observers: [
+		'tracksChanged(tracks.*)'
+		'playlistsChanged(playlists.*)'
+		'tagsChanged(tags.*)'
+		'testChange(playlist.rules.splices)'
+	]
+	###
 	# !fold
+
+	testChange: (changeRecord)->
+		console.log "PATH HIT"
+		console.log @convertChangeRecord(changeRecord)
+	playlistsChanged: (changeRecord)->
+		console.log @convertChangeRecord(changeRecord)
+	tagsChanged: (changeRecord)->
+		console.log @convertChangeRecord(changeRecord)
+	tracksChanged: (changeRecord)->
+		console.log @convertChangeRecord(changeRecord)
+		###
+		console.log arguments
+		console.log @tracks
+		if changeRecord?
+			path = changeRecord.path.split(".")
+			if path[1]?
+				#console.log path[1].substr(0, 1)
+				if path[1].substr(0, 1) == "#"
+					if path[2]?
+						track = @get("tracks.#{path[1]}")
+						@queueData("track", track.id, path[2], track[path[2]])
+					#console.log track
+			###
+	convertChangeRecord: (changeRecord)->
+		###
+		path = changeRecord.path.split(".")
+		if path[path.length-1] == "splices"
+			if changeRecord.keySplices.added.length > 0
+				return {
+					CRUD: "C"
+					basePath: entry[0]
+					field: entry[2] or null
+					key: changeRecord.keySplices.added[0]
+				}
+			if changeRecord.keySplices.removed.length > 0
+				return {
+					CRUD: "D"
+					basePath: entry[0]
+					field: entry[2] or null
+					key: changeRecord.keySplices.deleted[0]
+				}
+		else
+			return {
+				elem: path[1]
+			}
+		###
 
 	portal: new pluginPortals.ClientPortal("application", {
 		# Plugin FNs @fold
@@ -63,6 +119,7 @@ window.elements.app = Polymer(
 		)
 	ready: ()->
 		console.log("ready")
+		console.log @properties
 	attached: ()->									# Page JS Setup, Plugin Listener Creation
 		console.log "attached"
 		@routerSetup()
@@ -70,19 +127,20 @@ window.elements.app = Polymer(
 
 	#User Management Functions @fold
 	login: ()->
-		@display.spinner()
-		@xhr(
-			method: "POST"
-			url: "http://#{@urlBase}:3000/api/JLUsers/login"
-			data:
-				username: @user.login.username
-				password: @user.login.password
-		).then((data)=>
-			Cookies.set("token", data.id)
-			Cookies.set("user", data.userId)
-			@setRoute("app")
-			@display.hideSpinner()
+		@spinner(()=>
+			@xhr(
+				method: "POST"
+				url: "http://#{@urlBase}:3000/api/JLUsers/login"
+				data:
+					username: @user.login.username
+					password: @user.login.password
+			).then((data)=>
+				Cookies.set("token", data.id)
+				Cookies.set("user", data.userId)
+				@setRoute("app")
+			)
 		)
+
 	logout: ()->
 		@xhr({method: "POST", url: "http://#{@urlBase}:3000/api/DAUsers/login"}).then((response, xhr)->
 			Cookies.remove("token")
@@ -138,51 +196,32 @@ window.elements.app = Polymer(
 			)
 		test: ()->
 			app.route = "test"
-	display:
-		track: (track)->
-			while app.$["trackDisplay"].firstChild?
-				app.$["trackDisplay"].removeChild(app.$["trackDisplay"].firstChild)
-			app.$["trackDisplay"].appendChild new elements.libraryEntry.details(track.id)
-			app.$["trackDisplay"].open()
-		spinner: ()->
-			app.$["spinner-dialog"].open()
-			app.$.spinner.active=true
-		hideSpinner: ()->
-			app.$["spinner-dialog"].close()
-			app.$.spinner.active=false
 	# !fold-children
 
 	upsert: (type, data = {}, where = {}, force = false)->
 		#TODO: Check library data against incoming data after an id match is found so we 'update' rather than 'skip'
 		return new Promise((resolve, reject)=>
 			if !force
-				if type == "libraryEntry"
-					libraryEntry = _.findWhere(@libraryEntries, where)
-					if libraryEntry?
-						console.log "skipped library entry"
-						resolve(libraryEntry)
-						return
-				else if type == "tag"
+				if type == "tag"
 					tag = _.findWhere(@tags, where)
 					if tag?
 						console.log "skipped tag"
 						resolve(tag)
 						return
 				else if type == "track"
-					libraryEntry = _.find(@libraryEntries, (item)->
+					track = _.find(@tracks, (item)->
 						for property, value of where
 							if item.track[property] != value
 								return false
 							else
 								return true
 					)
-					if libraryEntry?
+					if track?
 						console.log "skipped track"
 						resolve(libraryEntry.track)
 						return
-			if type != "track"
-				where.jlUser = Cookies.get("user")
-				data.jlUserId = Cookies.get("user")
+			where.jlUser = Cookies.get("user")
+			data.jlUserId = Cookies.get("user")
 			@xhr(
 				method: "POST"
 				url: "http://#{@urlBase}:3000/api/#{type.pluralize()}/upsertWithWhere"
@@ -226,7 +265,7 @@ window.elements.app = Polymer(
 							###
 				for playlist, key in servicePlaylists
 					do (playlist)=>
-						if key < 999999
+						if key < 2
 							globalTag = {}
 							console.log playlist
 							Promise.resolve().then(()=>
@@ -240,22 +279,15 @@ window.elements.app = Polymer(
 									args:
 										id: playlist.id
 								})
-							).then((playlistEntries)=>
-								for track, key in playlistEntries
+							).then((playlistTracks)=>
+								for track, key in playlistTracks
 									@upsert("track", track, {title: track.title, artist: track.artist, millisduration: track.millisduration}).then((track)=>
-										console.log track
-										id = track.id
-										track.trackId = id
-										delete track.id
-										@upsert("libraryEntry", track, {trackId: id})
-									).then((libraryEntry)=>
-										console.log libraryEntry
 										@xhr(
 											type: "PUT"
-											url: "http://#{@urlBase}:3000/api/tags/#{globalTag.id}/libraryEntries/rel/#{libraryEntry.id}"
+											url: "http://#{@urlBase}:3000/api/tags/#{globalTag.id}/tracks/rel/#{track.id}"
 										)
 									)
-								)
+							)
 				resolve()
 			)
 			###
@@ -281,12 +313,13 @@ window.elements.app = Polymer(
 	loadJamListData: ()->
 		#TODO user authentication
 		return new Promise((resolve, reject)=>
-			libraryEntries = @xhr(
+			tracks = @xhr(
 				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/libraryEntries"
+				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tracks"
 				data:
 					filter:
-						include: ['track', 'tags']
+						include:
+							relation: 'tags'
 			)
 			playlists = @xhr(
 				method: "GET"
@@ -300,24 +333,21 @@ window.elements.app = Polymer(
 				method: "GET"
 				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tags"
 			)
-			Promise.all([libraryEntries, playlists, tags]).then((data)=>
+			Promise.all([tracks, playlists, tags]).then((data)=>
 				console.log data
-				@libraryEntries = data[0]
+				@tracks = data[0]
 				@playlists = data[1]
 				@tags = data[2]
 				resolve()
 			)
 		)
 
-	get: (type, id)->
-		console.log "GETTING"
-		console.log id
-		id = +id
-		console.log type
-		console.log type.pluralize()
-		console.log @[type.pluralize()]
-		console.log id
+	getData: (type, id)->
+		id = Number(id)
 		return _.find(@[type.pluralize()], (instData)-> instData.id == id)
+	getIndex: (type, id)->
+		id = Number(id)
+		return _.findIndex(@[type.pluralize()], (instData)-> instData.id == id)
 	find: (type, data)->
 		if typeof data == "object"
 			return _.findWhere(@[type.pluralize()], data)
@@ -450,6 +480,30 @@ window.elements.app = Polymer(
 		@cb - Function
 		@context - Object
 	###
+	spinner: (fn)->
+		return new Promise((resolve, reject)=>
+			if !@$.spinner.active
+				@$["spinner-dialog"].open()
+				fn().then((data)=>
+					@hideSpinner() if @$.spinner.active
+					resolve(data)
+				).catch((e)=>
+					@hideSpinner() if @$.spinner.active
+					@fail("Error: #{e.msg}")
+					console.log e
+					reject(e)
+				)
+				@$.spinner.active=true
+			else
+				fn().then((data)=>
+					resolve(data)
+				).catch((e)=>
+					reject(e)
+				)
+		)
+	hideSpinner: ()->
+		@$["spinner-dialog"].close()
+		@$.spinner.active=false
 	confirm: (args)->
 		console.log args
 		@$.confirmDialog.open()
@@ -461,12 +515,8 @@ window.elements.app = Polymer(
 			@$.confirmDialog.close()
 		)
 	fail: (msg)->
-		@$.errorDialog.open()
-		console.log @$
-		@$.message.innerHTML = msg
-		window.setTimeout(()=>
-			@$.errorDialog.close()
-		, "10000")
+		@$.toast.text=msg
+		@$.toast.toggle()
 	# !fold
 
 	#Sorting Functions @fold

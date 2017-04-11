@@ -12,7 +12,7 @@
 	<style include="shared-styles"></style>
 	<style is="custom-style">	</style>
 	<template>
-		<div row>
+		<div row center>
 			<paper-dropdown-menu label="Rule">
 				<paper-menu selected="{{ruleType}}" attr-for-selected="id" class="dropdown-content">
 					<paper-item class="horizontal layout" id="rated">Is rated...</paper-item>
@@ -62,6 +62,7 @@
 					<vaadin-date-picker value="{{rule}}"></vaadin-date-picker>
 				</template>
 			</template>
+			<paper-icon-button icon="icons:delete" on-tap="deleteRule"></paper-icon-button>
 		</div>
 	</template>
 </dom-module>
