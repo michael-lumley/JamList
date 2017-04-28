@@ -1,7 +1,7 @@
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <script src="../../bower_components/jquery/dist/jquery.min.js"></script>
 
-<dom-module id="loopback-data-source">
+<dom-module id="loopback-data-model">
 	<template>
 		<iron-ajax
 			auto
@@ -14,7 +14,10 @@
 			params="{{params}}"
 		></iron-ajax>
 	</template>
-
 </dom-module>
 
-<script src="loopback-data-source.js"></script>
+<dom-module id-"loopback-has-relation"></dom-module>
+<dom-module id-"loopback-belongs-relation"></dom-module>
+<dom-module id-"loopback-has-belongs-relation"></dom-module>
+
+<script src="loopback-data-model.js"></script>

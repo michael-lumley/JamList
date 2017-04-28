@@ -4,18 +4,18 @@
   "base": "PersistedModel",
   "idInjection": true,
   "properties": {
-		"ruleType": {
-			"type": "string"
-		},
+    "ruleType": {
+      "type": "string"
+    },
     "rule": {
       "type": "number"
     },
     "greater": {
       "type": "number"
     },
-		"group": {
-			"type": "number"
-		}
+    "group": {
+      "type": "number"
+    }
   },
   "validations": [],
   "relations": {
@@ -30,6 +30,25 @@
       "foreignKey": ""
     }
   },
-  "acls": [],
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$unauthenticated",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    }
+  ],
   "methods": []
 }

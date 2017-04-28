@@ -11,6 +11,15 @@ polymerDefinition = {
 		tracks:
 			type: Array
 			notify: true
+		activeList:
+			type: Number
+			notify: true
+		rules:
+			type: Array
+			notify: true
+		tags:
+			type: Array
+			notify: true
 	listeners:
 		'_deleteConfirm': '_deleteConfirm'
 		'_generateNote': '_generateNote'
@@ -24,23 +33,16 @@ polymerDefinition = {
 		console.log "listelemcreate"
 		console.log @
 	ready: ()->			 # Create Filters; Row Style Func
+		window.test = @
 	attached: ()->
 
 	addPlaylist: ()->
-		app.xhr({
-			method: "POST"
-			url: "http://#{app.urlBase}:3000/api/playlists"
-			data:
-				name: "New Playlist"
+		app.data.create("playlist", {
+			name: "New Playlist"
+			jlUserId: "lumleym"
 		}).then((data)=>
-			@push("playlists", {
-				name: data.name
-				rules: []
-				id: data.id
-			})
 			@activeList = data.id
 		)
-
 	# !fold
 
 	# Event Functions @fold

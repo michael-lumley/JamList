@@ -19,59 +19,42 @@
 			</section>
 			<section hero>
 				<div row center>
-					<h4>[[filteredEntries.length]] tracks match [[rules.length]] Rules...</h4>
+					<h4>[[filteredEntries.length]] tracks match [[formattedRules.length]] Rules...</h4>
 					<paper-icon-button id="rulesExpand" animate rotate icon="icons:expand-less" on-tap="toggleRules"></paper-icon-button>
 				</div>
 				<iron-collapse id="rulesCollapse">
 					<div style="max-height: 33%; overflow-y:auto">
+						Match ALL of the following rules...
 						<template is="dom-repeat" items="{{formattedRules}}" as="group">
 							<div blackBorder roundedCorners pad style="margin: 6px">
 								<div row>
 									Match ANY of the following rules...
 									<paper-icon-button icon="icons:add-circle" on-tap="addRule" key="{{group.key}}"></paper-icon-button>
 								</div>
-								<template is="dom-repeat" items="{{group.rules}}" as="item">
-									<rule-detail
-										id = {{item.id}}
-										rule-type = {{item.ruleType}}
-										rule = {{item.rule}}
-										greater = {{item.greater}}
-										playlist-id = {{item.playlistId}}
-										tagId = {{item.tagId}}
-									></rule-detail>
+								<template is="dom-repeat" items="{{rules}}" as="rule">
+									<template is="dom-if" if="{{displayRule(rule, group.key)}}">
+										<rule-detail
+											id = {{rule.id}}
+											rule-type = {{rule.ruleType}}
+											rule = {{rule.rule}}
+											greater = {{rule.greater}}
+											playlist-id = {{rule.playlistId}}
+											tagId = {{rule.tagId}}
+										></rule-detail>
+									</template>
 								</template>
 							</div>
 						</template>
 					</div>
 					<div row flex pad>
-						<paper-button on-click="addRuleGroup" info raised>Add Rule Group</paper-button>
-						<paper-button on-click="savePlaylist" primary raised>Save Playlist</paper-button>
+						<paper-button on-click="addRule" info raised>Add Rule Group</paper-button>
+						<paper-button on-click="filterTracks" primary raised>Update Playlist</paper-button>
 					</div>
 				</iron-collapse>
 			</section>
 			<section>
 				<array-selector id="selector" items="{{tracks}}" selected="{{filteredEntries}}" multi toggle></array-selector>
-				<iron-data-table items="{{filteredEntries}}" details-enabled style="height: 100%">
-					<template is="row-detail">
-						<track-details
-							album="{{item.album}}"
-							album-art-link="{{item.albumArtLink}}"
-							artist="{{item.artist}}"
-							library-entry-id="{{item.id}}"
-							millisduration="{{item.millisduration}}"
-							play-count="{{item.playCount}}"
-							rating="{{item.rating}}"
-							title="{{item.title}}"
-							track-id="{{item.id}}"
-							tags="{{item.tags}}"
-						></track-details>
-					</template>
-					<data-table-column name="Title" sort-by="title" filter-by="title">
-						<template is="header">Title <paper-icon-button icon="search"></paper-icon-button></template>
-						<template>[[item.title]]</template>
-					</data-table-column>
-					<data-table-column name="Play Count" sort-by="playCount"><template>[[item.playCount]]</template></data-table-column>
-				</iron-data-table>
+				<track-list tracks="{{filteredEntries}}"></track-list>
 				After Data Table
 			</section>
 		</div>

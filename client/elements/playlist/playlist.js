@@ -8,7 +8,9 @@
   window.elements.playlist.base = {
     properties: {
       id: {
-        type: Number
+        type: Number,
+        notify: true,
+        value: 0
       },
       name: {
         type: String,
@@ -25,6 +27,11 @@
         notify: true,
         value: []
       },
+      tags: {
+        type: Array,
+        notify: true,
+        value: []
+      },
       tracks: {
         type: Array,
         notify: true
@@ -34,60 +41,54 @@
         notify: true
       },
       formattedRules: {
-        computed: 'formatRules(rules.*)'
+        type: Array,
+        notify: true,
+        value: []
       }
     },
     listeners: {
       ruleDelete: "deleteRule",
       toggleRules: "toggleRules"
     },
-    observers: ["playlistLevelObserver(name)"],
-    playlistLevelObserver: (function(_this) {
-      return function(changeRecord) {
-        return console.log(app.convertChangeRecord(changeRecord));
-      };
-    })(this),
-    factoryImpl: function(id) {
-      var key, playlistData, property, results;
-      if (id != null) {
-        playlistData = app.get("playlist", id);
-        results = [];
-        for (key in playlistData) {
-          property = playlistData[key];
-          results.push(this[key] = property);
-        }
-        return results;
-      }
-    },
+    observers: ["filterTracks(tracks, formattedRules)"],
     addRule: function(e) {
-      return this.push("rules", {
-        group: e.target.parentElement.key
-      });
-    },
-    deleteRule: function(e) {
-      var index;
-      console.log(e.detail.id);
-      index = _.findIndex(this.rules, function(item) {
-        return _$.intEqual(item.id, e.detail.id);
-      });
-      return app.xhr({
-        method: "DELETE",
-        url: "http://" + app.urlBase + ":3000/api/Rules/" + e.detail.id
-      }).then((function(_this) {
+      return app.spinner((function(_this) {
         return function() {
-          return _this.splice('rules', index, 1);
+          var group;
+          if (e.target.parentElement.key != null) {
+            group = e.target.parentElement.key;
+          } else {
+            if (_this.formattedRules.length > 0) {
+              group = _this.formattedRules[_this.formattedRules.length - 1].key + 1;
+            } else {
+              group = 0;
+            }
+          }
+          return app.data.create("rule", {
+            group: group
+          }).then(function(data) {
+            return app.data.link({
+              model: "rule",
+              id: data.id
+            }, {
+              model: "playlist",
+              id: _this.id
+            }).then(function(data) {
+              return _this.formatRules();
+            });
+          });
         };
       })(this));
     },
-    addRuleGroup: function() {
-      var key;
-      if (this.formattedRules.length > 0) {
-        key = this.formattedRules[this.formattedRules.length - 1].key + 1;
-      } else {
-        key = 0;
-      }
-      return this.push("rules", {
-        group: key
+    deleteRule: function(e) {
+      return app.spinner((function(_this) {
+        return function() {
+          return app.data.playlists.deleteRelated("rule", _this.id, e.detail.id);
+        };
+      })(this)).then(function(data) {
+        return app.data.rules.deleteById(e.detail.id);
+      })["catch"](function(error) {
+        throw error;
       });
     },
     toggleRules: function() {
@@ -96,27 +97,36 @@
     },
     formatRules: function(rules) {
       var group, i, key, len, map, ref, ret, rule;
+      console.log("formattingRules");
+      console.log(this.rules);
       map = {};
       ret = [];
-      if (rules != null) {
-        ref = rules.base;
-        for (i = 0, len = ref.length; i < len; i++) {
-          rule = ref[i];
-          this.validateRule(rule);
+      ref = this.rules;
+      for (i = 0, len = ref.length; i < len; i++) {
+        rule = ref[i];
+        if (rule.playlistId === this.id) {
           if (map[Number(rule.group)] == null) {
             map[Number(rule.group)] = [];
           }
           map[Number(rule.group)].push(rule);
         }
-        for (key in map) {
-          group = map[key];
-          ret.push({
-            key: Number(key),
-            rules: group
-          });
-        }
       }
+      for (key in map) {
+        group = map[key];
+        ret.push({
+          key: Number(key),
+          rules: group
+        });
+      }
+      this.set("formattedRules", ret);
+      console.log(this.formattedRules);
       return ret;
+    },
+    displayRule: function(rule, group) {
+      if (_$.intEqual(rule.playlistId, this.id) && _$.intEqual(rule.group, group)) {
+        return true;
+      }
+      return false;
     },
     validateRule: function(rule) {
       if (rule.ruleType === "rated" && rule.rule > 5) {
@@ -135,10 +145,10 @@
           rule = ref1[j];
           if (this.filters[rule.ruleType] != null) {
             ent = this.filters[rule.ruleType](remaining, rule);
-            passingTracks = passingEntries.concat(ent);
+            passingTracks = passingTracks.concat(ent);
           }
         }
-        remaining = _.uniq(passingEntries);
+        remaining = _.uniq(passingTracks);
       }
       results = [];
       for (k = 0, len2 = remaining.length; k < len2; k++) {
@@ -256,7 +266,7 @@
               console.log(property);
               data[key] = rule[key];
             }
-            data.playlistId = _this.id;
+            data.id = _this.id;
             results.push(app.upsert("rule", data, {
               id: rule.id
             }, true));
@@ -275,11 +285,10 @@
     is: "playlist-detail",
     created: function() {},
     ready: function() {
-      return this.filterTracks();
+      window.test = this;
+      return this.formatRules();
     },
     attached: function() {}
   }));
-
-  console.log("playlist");
 
 }).call(this);

@@ -1,0 +1,50 @@
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<script src="../../bower_components/jquery/dist/jquery.js"></script>
+<script src="../../bower_components/querystring/querystring.min.js"></script>
+
+<dom-module id="loopback-data">
+	<template><!--
+		<iron-ajax
+			auto
+			id="source"
+			method="get"
+			url="{{url}}"
+			handle-as="json"
+			on-response="handleResponse"
+			last-response="{{data}}"
+			params="{{params}}"
+		></iron-ajax>-->
+	</template>
+</dom-module>
+
+<script src="loopback-data.js"></script>
+
+
+<!--
+	<loobpack-data
+		url-root="localhost:3000/api"
+		has-many="[{'playlist': 'rule' }]"
+		has-belongs-many="[{'track': 'tag'}]"
+	>
+		<loopback-data-model
+			model="track"
+			where='{"jlUserId": "lumleym"}'
+			include='{"relation": "tags"}'
+		></loopback-data-model>
+		<loopback-data-model
+			model="tag"
+			where='{"jlUserId": "lumleym"}'
+			include=''
+		></loopback-data-model>
+		<loopback-data-model
+			model="playlist"
+			where='{"jlUserId": "lumleym"}'
+			include='{"relation": "rules"}'
+		></loopback-data-model>
+		<loopback-data-model
+			model="rules"
+			where='{"jlUserId": "lumleym"}'
+			include=''
+		></loopback-data-model>
+	</loopback-data>
+-->

@@ -9,7 +9,7 @@
 <script src="bower_components/morslamina-utility/build/utility.js"></script>
 
 <link href="bower_components/polymer/polymer.html" rel="import">
-<link rel="import" href="elements/loopback-data-source/loopback-data-source.html">
+<link rel="import" href="elements/loopback-data/loopback-data.html">
 <link rel="import" href="style/dark-side/dark-side.html">
 <body>
 	<style>
@@ -17,17 +17,30 @@
 			overflow-y: hidden;
 		}
 	</style>
-	<loopback-data-source
-		id="track-data"
-		url-base="tracks"
+	<jamlist-data
 		url-root="localhost:3000/api"
-		where='{"jlUserId": "lumleym"}'
-		include='{"relation": "tags"}'
-		has-many='[]'
-		has-belongs-many='["tags"]'
-	></loopback-data-source>
+		models-path="loopback_models"
+		models='{
+			"track": {
+				"where": {"jlUserId": "lumleym"},
+				"include": {"relation": "tags"}
+			},
+			"tag": {
+				"where": {"jlUserId": "lumleym"},
+				"include": {"relation": "tracks"}
+			},
+			"playlist": {
+				"where": {"jlUserId": "lumleym"},
+				"include": {"relation": "rules"}
+			},
+			"rule": {
+				"where": {"jlUserId": "lumleym"}
+			}
+		}'
+	></jamlist-data>
 
 	<script>
+	/*
 		setTimeout(function(){
 			source = document.getElementById("track-data");
 			console.log(source.data)
@@ -45,6 +58,6 @@
 			source.push("data." + source.getIndexBySQLId(6) + ".tags", "testtag")
 			console.log(ID2);
 		}, "1500")
-
+	*/
 	</script>
 </body>

@@ -28,6 +28,10 @@ window.elements.track.base = {
 			type: Array
 			notify: true
 			value: []
+		tagsDB:
+			type: Array
+			notify: true
+			value: []
 		miscArray:
 			type: Array
 			notify: true
@@ -38,19 +42,26 @@ window.elements.track.base = {
 		trackId:
 			type: Number
 			notify: true
-	observers: [
-		"trackLevelObserver(tags.*)"
-	]
 	# !fold
-	trackLevelObserver: (changeRecord)=>
-		console.log changeRecord
+
 	# Lifecycle Functions @fold
 	ready: ()->
-		console.log "ready"
-		console.log @tags
-		setTimeout(()=>
-			@push("tags", {name: "testtag"})
-		, "2500")
+		@$.tags.addEventListener("tag-added", (e)=>
+			console.log e
+			@pop("tags", tags.legnth-1)
+			console.log @tags
+			app.data.findOrCreate("tag", {name: e.detail}).then((tag)=>
+				app.data.link({
+					model: "track"
+					id: @trackId
+				},{
+					model: "tag"
+					id: tag.id
+				})
+			).then((data)=>
+				console.log @tags
+			)
+		)
 		###
 		@addEventListener("tag-added", (e)=>
 			app.addTag(@libraryEntryId, e.detail)

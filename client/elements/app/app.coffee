@@ -4,91 +4,46 @@ window.elements.app = Polymer(
 	is: "jamlist-app"
 	# Polymer Inits @fold-children
 	properties:
-		playerActive:
-			type: Boolean
-			value: false
-		playlists:
-			type: Array
+		path:
+			type: String
 			notify: true
-		tracks:
+		playlists:
 			type: Array
 			notify: true
 		queue:
 			type: Object
 			value: {}
-		serviceActive:
-			type: Boolean
-			value: false
+		rules:
+			type: Array
+			notify: true
 		tags:
 			type: Array
 			notify: true
-		tokens:
+		tracks:
 			type: Array
-		urlBase:
-			type: "string"
+			notify: true
 		user:
 			type: Object
 			notify: true
 			value: ()->
-				return {login: {username: "", password: ""}, google: {}, jamlist: {}, deferred: $.Deferred()}
-	listeners:
-		'close-case': 'closeCase'
-	###
+				###
+					Google: The Google user's info
+						email:
+						id:
+						obfid:
+						tier:
+						xt:
+					Jamlist:
+						user:
+						password:
+						token:
+					Deferred: resolved when Google User is Loaded
+				###
+				return {google: {}, jamlist: {}, deferred: $.Deferred()}
 	observers: [
-		'tracksChanged(tracks.*)'
-		'playlistsChanged(playlists.*)'
-		'tagsChanged(tags.*)'
-		'testChange(playlist.rules.splices)'
+		'pathChange(path)'
 	]
-	###
 	# !fold
-
-	testChange: (changeRecord)->
-		console.log "PATH HIT"
-		console.log @convertChangeRecord(changeRecord)
-	playlistsChanged: (changeRecord)->
-		console.log @convertChangeRecord(changeRecord)
-	tagsChanged: (changeRecord)->
-		console.log @convertChangeRecord(changeRecord)
-	tracksChanged: (changeRecord)->
-		console.log @convertChangeRecord(changeRecord)
-		###
-		console.log arguments
-		console.log @tracks
-		if changeRecord?
-			path = changeRecord.path.split(".")
-			if path[1]?
-				#console.log path[1].substr(0, 1)
-				if path[1].substr(0, 1) == "#"
-					if path[2]?
-						track = @get("tracks.#{path[1]}")
-						@queueData("track", track.id, path[2], track[path[2]])
-					#console.log track
-			###
-	convertChangeRecord: (changeRecord)->
-		###
-		path = changeRecord.path.split(".")
-		if path[path.length-1] == "splices"
-			if changeRecord.keySplices.added.length > 0
-				return {
-					CRUD: "C"
-					basePath: entry[0]
-					field: entry[2] or null
-					key: changeRecord.keySplices.added[0]
-				}
-			if changeRecord.keySplices.removed.length > 0
-				return {
-					CRUD: "D"
-					basePath: entry[0]
-					field: entry[2] or null
-					key: changeRecord.keySplices.deleted[0]
-				}
-		else
-			return {
-				elem: path[1]
-			}
-		###
-
 	portal: new pluginPortals.ClientPortal("application", {
 		# Plugin FNs @fold
 		beforeSend: (args = {}) =>
@@ -100,29 +55,38 @@ window.elements.app = Polymer(
 			return args
 		#!fold
 	})
-
 	# Lifecycle Functions @fold
-	created: ()->
+	ready: ()->
+		# Bind to the window and to the data element
 		window.app = @
-		@urlBase = "localhost"
-		@tokens = []
-		console.log "sending user request"
+		@data = @$.data
+
+		#Bind path to url hash (in combo with pathChagne Observer)
+		window.addEventListener('hashchange', (hash)=>
+			@path = location.hash.substring(2)
+		)
+		@path = location.hash.substring(2)
+
+		#Get Google Login
 		@portal.sendMessage({
 			target: "google_music"
 			fn: "userInfo"
 			args: {}
 		}).then((response)=>
 			console.log response
-			#TODO: What if no user yet?
 			@user.google = response.user
 			@user.deferred.resolve()
 		)
-	ready: ()->
-		console.log("ready")
-		console.log @properties
-	attached: ()->									# Page JS Setup, Plugin Listener Creation
-		console.log "attached"
-		@routerSetup()
+
+		#Import User Data from Cookies
+		@set("user.jamlist.username", Cookies.get("user"))
+		@set("user.jamlist.token", Cookies.get("token"))
+
+		#Listen for Data Events
+		@data.addEventListener("401", ()=>
+			@fail("You need to login!")
+			@path = "login"
+		)
 	# !fold
 
 	#User Management Functions @fold
@@ -130,17 +94,17 @@ window.elements.app = Polymer(
 		@spinner(()=>
 			@xhr(
 				method: "POST"
-				url: "http://#{@urlBase}:3000/api/JLUsers/login"
+				url: "http://localhost:3000/api/JLUsers/login"
 				data:
-					username: @user.login.username
-					password: @user.login.password
+					username: @user.jamlist.username
+					password: @user.jamlist.password
 			).then((data)=>
 				Cookies.set("token", data.id)
 				Cookies.set("user", data.userId)
-				@setRoute("app")
+				@data.load()
+				@set("path", "tracks")
 			)
 		)
-
 	logout: ()->
 		@xhr({method: "POST", url: "http://#{@urlBase}:3000/api/DAUsers/login"}).then((response, xhr)->
 			Cookies.remove("token")
@@ -148,8 +112,46 @@ window.elements.app = Polymer(
 			page("/login")
 		)
 	# !fold
-
 	#Router and Display @fold-children
+	pathChange: (path)->
+		window.location.hash = "#/" + path
+	###
+	router: ()->
+		url = location.hash.slice(1) || '/';
+		route = @routes.prelim(url.substr(1))
+			.then((route)=>
+				if route and @routes[route]?
+					@routes[route]()
+			).catch((error)=>
+				console.log error
+			)
+	routerSetup: ()->login
+			return new Promise((resolve, reject)=>
+				if path == "/"
+					app.setRoute("tracks")
+					reject()
+				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
+					app.setRoute("login")
+					reject()
+				else
+					resolve(path)
+			)
+		login: ()->
+			console.log "setting path"
+			app.route = "login"listen for child element events
+		app: ()->
+			app.route = "app"
+		sync: ()->
+			console.log "syncing"
+			app.user.deferred.then(()=>
+				console.log "user resolved"
+				app.syncWithService()
+			)
+		test: ()->
+			app.route = "test"
+	###
+	# !fold-children
+	###
 	router: ()->
 		url = location.hash.slice(1) || '/';
 		route = @routes.prelim(url.substr(1))
@@ -176,10 +178,6 @@ window.elements.app = Polymer(
 				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
 					app.setRoute("login")
 					reject()
-				else if path != "login" and (!app.playlists? or !app.tags? or !app.libraryEntries?)
-					app.loadJamListData().then(()=>
-						resolve(path)
-					)
 				else
 					resolve(path)
 			)
@@ -196,8 +194,8 @@ window.elements.app = Polymer(
 			)
 		test: ()->
 			app.route = "test"
+	###
 	# !fold-children
-
 	upsert: (type, data = {}, where = {}, force = false)->
 		#TODO: Check library data against incoming data after an id match is found so we 'update' rather than 'skip'
 		return new Promise((resolve, reject)=>
@@ -224,7 +222,7 @@ window.elements.app = Polymer(
 			data.jlUserId = Cookies.get("user")
 			@xhr(
 				method: "POST"
-				url: "http://#{@urlBase}:3000/api/#{type.pluralize()}/upsertWithWhere"
+				url: "http://#{@urlBase}:3000/api/#{tyloginpe.pluralize()}/upsertWithWhere"
 				data: data
 				qs:
 					where: where
@@ -312,6 +310,7 @@ window.elements.app = Polymer(
 		)
 	loadJamListData: ()->
 		#TODO user authentication
+		###
 		return new Promise((resolve, reject)=>
 			tracks = @xhr(
 				method: "GET"
@@ -341,6 +340,7 @@ window.elements.app = Polymer(
 				resolve()
 			)
 		)
+		###
 
 	getData: (type, id)->
 		id = Number(id)
@@ -481,6 +481,7 @@ window.elements.app = Polymer(
 		@context - Object
 	###
 	spinner: (fn)->
+		console.log fn
 		return new Promise((resolve, reject)=>
 			if !@$.spinner.active
 				@$["spinner-dialog"].open()

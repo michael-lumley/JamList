@@ -12,15 +12,18 @@
       },
       ruleType: {
         type: String,
-        notify: true
+        notify: true,
+        value: ""
       },
       rule: {
         type: Number,
-        notify: true
+        notify: true,
+        value: 0
       },
       greater: {
         type: Number,
-        notify: true
+        notify: true,
+        value: 0
       },
       playlistId: {
         type: Number,
@@ -57,7 +60,6 @@
       return app.tags;
     },
     deleteRule: function() {
-      console.log("delete");
       return this.fire('ruleDelete', {
         id: this.id
       });

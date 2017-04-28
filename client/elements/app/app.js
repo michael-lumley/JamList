@@ -6,15 +6,11 @@
   window.elements.app = Polymer({
     is: "jamlist-app",
     properties: {
-      playerActive: {
-        type: Boolean,
-        value: false
-      },
-      playlists: {
-        type: Array,
+      path: {
+        type: String,
         notify: true
       },
-      tracks: {
+      playlists: {
         type: Array,
         notify: true
       },
@@ -22,29 +18,37 @@
         type: Object,
         value: {}
       },
-      serviceActive: {
-        type: Boolean,
-        value: false
+      rules: {
+        type: Array,
+        notify: true
       },
       tags: {
         type: Array,
         notify: true
       },
-      tokens: {
-        type: Array
-      },
-      urlBase: {
-        type: "string"
+      tracks: {
+        type: Array,
+        notify: true
       },
       user: {
         type: Object,
         notify: true,
         value: function() {
+
+          /*
+          					Google: The Google user's info
+          						email:
+          						id:
+          						obfid:
+          						tier:
+          						xt:
+          					Jamlist:
+          						user:
+          						password:
+          						token:
+          					Deferred: resolved when Google User is Loaded
+           */
           return {
-            login: {
-              username: "",
-              password: ""
-            },
             google: {},
             jamlist: {},
             deferred: $.Deferred()
@@ -52,70 +56,7 @@
         }
       }
     },
-    listeners: {
-      'close-case': 'closeCase'
-    },
-
-    /*
-    	observers: [
-    		'tracksChanged(tracks.*)'
-    		'playlistsChanged(playlists.*)'
-    		'tagsChanged(tags.*)'
-    		'testChange(playlist.rules.splices)'
-    	]
-     */
-    testChange: function(changeRecord) {
-      console.log("PATH HIT");
-      return console.log(this.convertChangeRecord(changeRecord));
-    },
-    playlistsChanged: function(changeRecord) {
-      return console.log(this.convertChangeRecord(changeRecord));
-    },
-    tagsChanged: function(changeRecord) {
-      return console.log(this.convertChangeRecord(changeRecord));
-    },
-    tracksChanged: function(changeRecord) {
-      return console.log(this.convertChangeRecord(changeRecord));
-
-      /*
-      		console.log arguments
-      		console.log @tracks
-      		if changeRecord?
-      			path = changeRecord.path.split(".")
-      			if path[1]?
-      				#console.log path[1].substr(0, 1)
-      				if path[1].substr(0, 1) == "#"
-      					if path[2]?
-      						track = @get("tracks.#{path[1]}")
-      						@queueData("track", track.id, path[2], track[path[2]])
-      					#console.log track
-       */
-    },
-    convertChangeRecord: function(changeRecord) {
-
-      /*
-      		path = changeRecord.path.split(".")
-      		if path[path.length-1] == "splices"
-      			if changeRecord.keySplices.added.length > 0
-      				return {
-      					CRUD: "C"
-      					basePath: entry[0]
-      					field: entry[2] or null
-      					key: changeRecord.keySplices.added[0]
-      				}
-      			if changeRecord.keySplices.removed.length > 0
-      				return {
-      					CRUD: "D"
-      					basePath: entry[0]
-      					field: entry[2] or null
-      					key: changeRecord.keySplices.deleted[0]
-      				}
-      		else
-      			return {
-      				elem: path[1]
-      			}
-       */
-    },
+    observers: ['pathChange(path)'],
     portal: new pluginPortals.ClientPortal("application", {
       beforeSend: (function(_this) {
         return function(args) {
@@ -132,12 +73,16 @@
         };
       })(this)
     }),
-    created: function() {
+    ready: function() {
       window.app = this;
-      this.urlBase = "localhost";
-      this.tokens = [];
-      console.log("sending user request");
-      return this.portal.sendMessage({
+      this.data = this.$.data;
+      window.addEventListener('hashchange', (function(_this) {
+        return function(hash) {
+          return _this.path = location.hash.substring(2);
+        };
+      })(this));
+      this.path = location.hash.substring(2);
+      this.portal.sendMessage({
         target: "google_music",
         fn: "userInfo",
         args: {}
@@ -148,29 +93,30 @@
           return _this.user.deferred.resolve();
         };
       })(this));
-    },
-    ready: function() {
-      console.log("ready");
-      return console.log(this.properties);
-    },
-    attached: function() {
-      console.log("attached");
-      return this.routerSetup();
+      this.set("user.jamlist.username", Cookies.get("user"));
+      this.set("user.jamlist.token", Cookies.get("token"));
+      return this.data.addEventListener("401", (function(_this) {
+        return function() {
+          _this.fail("You need to login!");
+          return _this.path = "login";
+        };
+      })(this));
     },
     login: function() {
       return this.spinner((function(_this) {
         return function() {
           return _this.xhr({
             method: "POST",
-            url: "http://" + _this.urlBase + ":3000/api/JLUsers/login",
+            url: "http://localhost:3000/api/JLUsers/login",
             data: {
-              username: _this.user.login.username,
-              password: _this.user.login.password
+              username: _this.user.jamlist.username,
+              password: _this.user.jamlist.password
             }
           }).then(function(data) {
             Cookies.set("token", data.id);
             Cookies.set("user", data.userId);
-            return _this.setRoute("app");
+            _this.data.load();
+            return _this.set("path", "tracks");
           });
         };
       })(this));
@@ -185,70 +131,90 @@
         return page("/login");
       });
     },
-    router: function() {
-      var route, url;
-      url = location.hash.slice(1) || '/';
-      return route = this.routes.prelim(url.substr(1)).then((function(_this) {
-        return function(route) {
-          if (route && (_this.routes[route] != null)) {
-            return _this.routes[route]();
-          }
-        };
-      })(this))["catch"]((function(_this) {
-        return function(error) {
-          return console.log(error);
-        };
-      })(this));
+    pathChange: function(path) {
+      return window.location.hash = "#/" + path;
     },
-    routerSetup: function() {
-      window.addEventListener('hashchange', this.router.bind(this));
-      return window.addEventListener('load', this.router.bind(this));
-    },
-    setRoute: function(route) {
-      return window.location.hash = "#/" + route;
-    },
-    routes: {
-      prelim: function(path) {
-        console.log(path);
-        return new Promise((function(_this) {
-          return function(resolve, reject) {
-            if (path === "/") {
-              app.setRoute("tracks");
-              reject();
-            }
-            if (path !== "login" && ((Cookies.get("user") == null) || (Cookies.get("token") == null))) {
-              app.setRoute("login");
-              return reject();
-            } else if (path !== "login" && ((app.playlists == null) || (app.tags == null) || (app.libraryEntries == null))) {
-              return app.loadJamListData().then(function() {
-                return resolve(path);
-              });
-            } else {
-              return resolve(path);
-            }
-          };
-        })(this));
-      },
-      login: function() {
-        console.log("setting path");
-        return app.route = "login";
-      },
-      app: function() {
-        return app.route = "app";
-      },
-      sync: function() {
-        console.log("syncing");
-        return app.user.deferred.then((function(_this) {
-          return function() {
-            console.log("user resolved");
-            return app.syncWithService();
-          };
-        })(this));
-      },
-      test: function() {
-        return app.route = "test";
-      }
-    },
+
+    /*
+    	router: ()->
+    		url = location.hash.slice(1) || '/';
+    		route = @routes.prelim(url.substr(1))
+    			.then((route)=>
+    				if route and @routes[route]?
+    					@routes[route]()
+    			).catch((error)=>
+    				console.log error
+    			)
+    	routerSetup: ()->login
+    			return new Promise((resolve, reject)=>
+    				if path == "/"
+    					app.setRoute("tracks")
+    					reject()
+    				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
+    					app.setRoute("login")
+    					reject()
+    				else
+    					resolve(path)
+    			)
+    		login: ()->
+    			console.log "setting path"
+    			app.route = "login"listen for child element events
+    		app: ()->
+    			app.route = "app"
+    		sync: ()->
+    			console.log "syncing"
+    			app.user.deferred.then(()=>
+    				console.log "user resolved"
+    				app.syncWithService()
+    			)
+    		test: ()->
+    			app.route = "test"
+     */
+
+    /*
+    	router: ()->
+    		url = location.hash.slice(1) || '/';
+    		route = @routes.prelim(url.substr(1))
+    			.then((route)=>
+    				if route and @routes[route]?
+    					@routes[route]()
+    			).catch((error)=>
+    				console.log error
+    			)
+    	routerSetup: ()->
+    		window.addEventListener('hashchange', @router.bind(@))
+    		window.addEventListener('load', @router.bind(@))
+    		#@router()
+    	setRoute: (route)->
+    		window.location.hash = "#/" + route;
+    	routes:
+    		prelim: (path)->
+    		 * Returns False if Prelim Sets a new Route, otherwise returns routes[fn] to be called
+    			console.log path
+    			return new Promise((resolve, reject)=>
+    				if path == "/"
+    					app.setRoute("tracks")
+    					reject()
+    				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
+    					app.setRoute("login")
+    					reject()
+    				else
+    					resolve(path)
+    			)
+    		login: ()->
+    			console.log "setting path"
+    			app.route = "login"
+    		app: ()->
+    			app.route = "app"
+    		sync: ()->
+    			console.log "syncing"
+    			app.user.deferred.then(()=>
+    				console.log "user resolved"
+    				app.syncWithService()
+    			)
+    		test: ()->
+    			app.route = "test"
+     */
     upsert: function(type, data, where, force) {
       if (data == null) {
         data = {};
@@ -293,7 +259,7 @@
           data.jlUserId = Cookies.get("user");
           return _this.xhr({
             method: "POST",
-            url: "http://" + _this.urlBase + ":3000/api/" + (type.pluralize()) + "/upsertWithWhere",
+            url: "http://" + _this.urlBase + ":3000/api/" + (tyloginpe.pluralize()) + "/upsertWithWhere",
             data: data,
             qs: {
               where: where
@@ -416,44 +382,38 @@
       })(this));
     },
     loadJamListData: function() {
-      return new Promise((function(_this) {
-        return function(resolve, reject) {
-          var playlists, tags, tracks;
-          tracks = _this.xhr({
-            method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/tracks",
-            data: {
-              filter: {
-                include: {
-                  relation: 'tags'
-                }
-              }
-            }
-          });
-          playlists = _this.xhr({
-            method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/playlists",
-            data: {
-              filter: {
-                include: {
-                  relation: 'rules'
-                }
-              }
-            }
-          });
-          tags = _this.xhr({
-            method: "GET",
-            url: "http://localhost:3000/api/jlUsers/" + (Cookies.get("user")) + "/tags"
-          });
-          return Promise.all([tracks, playlists, tags]).then(function(data) {
-            console.log(data);
-            _this.tracks = data[0];
-            _this.playlists = data[1];
-            _this.tags = data[2];
-            return resolve();
-          });
-        };
-      })(this));
+
+      /*
+      		return new Promise((resolve, reject)=>
+      			tracks = @xhr(
+      				method: "GET"
+      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tracks"
+      				data:
+      					filter:
+      						include:
+      							relation: 'tags'
+      			)
+      			playlists = @xhr(
+      				method: "GET"
+      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/playlists"
+      				data:
+      					filter:
+      						include:
+      							relation: 'rules'
+      			)
+      			tags = @xhr(
+      				method: "GET"
+      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tags"
+      			)
+      			Promise.all([tracks, playlists, tags]).then((data)=>
+      				console.log data
+      				@tracks = data[0]
+      				@playlists = data[1]
+      				@tags = data[2]
+      				resolve()
+      			)
+      		)
+       */
     },
     getData: function(type, id) {
       id = Number(id);
@@ -655,6 +615,7 @@
     		@context - Object
      */
     spinner: function(fn) {
+      console.log(fn);
       return new Promise((function(_this) {
         return function(resolve, reject) {
           if (!_this.$.spinner.active) {

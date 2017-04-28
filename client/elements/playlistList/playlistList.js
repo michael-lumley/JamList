@@ -17,6 +17,18 @@
       tracks: {
         type: Array,
         notify: true
+      },
+      activeList: {
+        type: Number,
+        notify: true
+      },
+      rules: {
+        type: Array,
+        notify: true
+      },
+      tags: {
+        type: Array,
+        notify: true
       }
     },
     listeners: {
@@ -30,22 +42,16 @@
       console.log("listelemcreate");
       return console.log(this);
     },
-    ready: function() {},
+    ready: function() {
+      return window.test = this;
+    },
     attached: function() {},
     addPlaylist: function() {
-      return app.xhr({
-        method: "POST",
-        url: "http://" + app.urlBase + ":3000/api/playlists",
-        data: {
-          name: "New Playlist"
-        }
+      return app.data.create("playlist", {
+        name: "New Playlist",
+        jlUserId: "lumleym"
       }).then((function(_this) {
         return function(data) {
-          _this.push("playlists", {
-            name: data.name,
-            rules: [],
-            id: data.id
-          });
           return _this.activeList = data.id;
         };
       })(this));

@@ -6,6 +6,7 @@
 <link href="../rule/rule.html" rel="import">
 <link href="../tag/tag.html" rel="import">
 <link href="../tag-dropdown/tag-dropdown.html" rel="import">
+<link rel="import" href="../loopback-data/loopback-data.html">
 
 <link rel="import" href="../../style/shared-styles.html">
 
@@ -65,54 +66,105 @@
 		}
 	</style>
   <template>
-		<iron-pages selected="{{route}}" attr-for-selected="key">
-			<!--@fold-->
-			<div key="app">
-				<paper-tabs selected="{{path}}" attr-for-selected="key">
-					<paper-tab key="tracks" on-click=""><iron-icon icon="av:library-music"></iron-icon>&nbsp;Tracks</paper-tab>
-					<paper-tab key="tags"><iron-icon icon="icons:bookmark"></iron-icon>&nbsp;Tags</paper-tab>
-					<paper-tab key="playlists"><iron-icon icon="av:playlist-play"></iron-icon>&nbsp;Playlists</paper-tab>
-					<paper-tab key="settings"><iron-icon icon="social:person"></iron-icon>&nbsp;Account</paper-tab>
-				</paper-tabs>
+		<jamlist-data
+			id = "data"
+			url-root="localhost:3000/api"
+			models-path="loopback_models"
+			tracks="{{tracks}}"
+			tags="{{tags}}"
+			playlists="{{playlists}}"
+			rules="{{rules}}"
+		></jamlist-data>
 
-				<iron-pages selected="{{path}}" attr-for-selected="key">
-					<!--@fold-->
-					<div key="tracks">
-						<div text-middle><h1>TRACKS</h1></div>
-						<track-list tracks="{{tracks}}"></track-list>
-					</div>
-					<div key="tags">
-						<tag-list
-							tags="{{tags}}"
-							tracks="{{tracks}}"
-						></tag-list>
-					</div>
-					<div key="playlists">
-						<playlist-list
-							playlists="{{playlists}}"
-							tracks="{{tracks}}"
-						></playlist-list>
-					</div>
-					<div key="settings">USER</div>
-					<!--!fold-->
-				</iron-pages>
-			</div>
-			<div key="login">
-				<paper-material elevation="1" style="width: 300px">
-		      <paper-item class="layout center"><h1>Jam List Music Database</h1></paper-item>
-		      <paper-item class="layout" style="padding: 0px">
-		        <paper-input label="Username" value="{{user.login.username}}" style="width: 100%"></paper-input>
-		      </paper-item>
-		      <paper-item class="layout" style="padding: 0px">
-		        <paper-input label="Password" value="{{user.login.password}}" type="password" style="width: 100%"></paper-input>
-		      </paper-item>
-		      <paper-item class="layout center end-justified" style="padding:10px">
-		        <paper-button class="greenButton" on-click="login">Login</paper-button>
-		      </paper-item>
-		    </paper-material>
-			</div>
-			<!--!fold-->
-		</iron-pages>
+
+		<!--<loopback-data-model
+			id="track-data"
+			model="tracks"
+			url-root="localhost:3000/api"
+			where='{"jlUserId": "lumleym"}'
+			include='{"relation": "tags"}'
+			has-many='[]'
+			has-belongs-many='["tags"]'
+			data="{{tracks}}"
+		></loopback-data-model>
+		<loopback-data-model
+			id="tag-data"
+			model="tags"
+			url-root="localhost:3000/api"
+			where='{"jlUserId": "lumleym"}'
+			include=''
+			has-many='[]'
+			has-belongs-many='["tracks"]'
+			data="{{tags}}"
+		></loopback-data-model>
+		<loopback-data-model
+			id="playlist-data"
+			model="playlists"
+			url-root="localhost:3000/api"
+			where='{"jlUserId": "lumleym"}'
+			include='{"relation": "rules"}'
+			has-many='["rules"]'
+			has-belongs-many='[]'
+			data="{{playlists}}"
+		></loopback-data-model>
+		<loopback-data-model
+			id="rule-data"
+			model="rules"
+			url-root="localhost:3000/api"
+			where='{"jlUserId": "lumleym"}'
+			include=''
+			has-many='[]'
+			has-belongs-many='[]'
+			data="{{rules}}"
+		></loopback-data-model>-->
+			<!--@fold-->
+		<div key="app">
+			<paper-tabs selected="{{path}}" attr-for-selected="key">
+				<paper-tab key="tracks" on-click=""><iron-icon icon="av:library-music"></iron-icon>&nbsp;Tracks</paper-tab>
+				<paper-tab key="tags"><iro#we only want to operate on "model" properties, filter the others outn-icon icon="icons:bookmark"></iron-icon>&nbsp;Tags</paper-tab>
+				<paper-tab key="playlists"><iron-icon icon="av:playlist-play"></iron-icon>&nbsp;Playlists</paper-tab>
+				<paper-tab key="settings"><iron-icon icon="social:person"></iron-icon>&nbsp;Account</paper-tab>
+			</paper-tabs>
+
+			<iron-pages selected="{{path}}" attr-for-selected="key">
+				<!--@fold-->
+				<div key="login">
+					<paper-material elevation="1" style="width: 300px">
+			      <paper-item class="layout center"><h1>Jam List Music Database</h1></paper-item>
+			      <paper-item class="layout" style="padding: 0px">
+			        <paper-input label="Username" value="{{user.jamlist.username}}" style="width: 100%"></paper-input>
+			      </paper-item>
+			      <paper-item class="layout" style="padding: 0px">
+			        <paper-input label="Password" value="{{user.jamlist.password}}" type="password" style="width: 100%"></paper-input>
+			      </paper-item>
+			      <paper-item class="layout center end-justified" style="padding:10px">
+			        <paper-button class="greenButton" on-click="login">Login</paper-button>
+			      </paper-item>
+			    </paper-material>
+				</div>
+				<div key="tracks">
+					<div text-middle><h1>TRACKS</h1></div>
+					<track-list tracks="{{tracks}}"></track-list>
+				</div>
+				<div key="tags">
+					<tag-list
+						tags="{{tags}}"
+						tracks="{{tracks}}"
+					></tag-list>
+				</div>
+				<div key="playlists">
+					<playlist-list
+						playlists="{{playlists}}"
+						tracks="{{tracks}}"
+						rules="{{rules}}"
+						tags="{{tags}}"
+					></playlist-list>
+				</div>
+				<div key="settings">USER</div>
+				<!--!fold-->
+			</iron-pages>
+		</div>
+		<!--!fold-->
 
 		<!--@fold-->
 		<paper-toast id="toast"></paper-toast>

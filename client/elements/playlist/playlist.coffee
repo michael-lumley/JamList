@@ -4,6 +4,8 @@ window.elements.playlist.base = {
 	properties:
 		id:
 			type: Number
+			notify: true
+			value: 0
 		name:
 			type: String
 			notify: true
@@ -16,6 +18,10 @@ window.elements.playlist.base = {
 			type: Array
 			notify: true
 			value: []
+		tags:
+			type: Array
+			notify: true
+			value: []
 		tracks:
 			type: Array
 			notify: true
@@ -23,63 +29,78 @@ window.elements.playlist.base = {
 			type: Array
 			notify: true
 		formattedRules:
-			computed: 'formatRules(rules.*)'
+			type: Array
+			notify: true
+			value: []
 	listeners:
 		ruleDelete: "deleteRule"
 		toggleRules: "toggleRules"
 	observers: [
-		"playlistLevelObserver(name)"
+		"filterTracks(tracks, formattedRules)"
 	]
 	# !fold
-	playlistLevelObserver: (changeRecord)=>
-		console.log app.convertChangeRecord(changeRecord)
-
-	#@fold Polymer Inits
-	factoryImpl: (id)->
-		if id?
-			playlistData = app.get("playlist", id)
-			for key, property of playlistData
-				@[key] = property
-	#!fold
-
 	#@fold Data Funcs
 	addRule: (e)->
-		@push("rules", {group: e.target.parentElement.key})
+		app.spinner(()=>
+			#Was this an add request from a specific group?
+			if e.target.parentElement.key?
+				group = e.target.parentElement.key
+			#Or are we creating a new rule group?
+			else
+				#Determine the lowest value key availlable
+				if @formattedRules.length > 0
+					group = @formattedRules[@formattedRules.length-1].key + 1
+				else
+				 	group = 0
+			app.data.create("rule", {group: group}).then((data)=>
+				app.data.link({
+					model: "rule",
+					id: data.id
+				},{
+					model: "playlist"
+					id: @id
+				}).then((data)=>
+					@formatRules()
+				)
+			)
+		)
 	deleteRule: (e)->
-		console.log e.detail.id
-		index = _.findIndex(@rules, (item)->
-			_$.intEqual(item.id, e.detail.id)
+		app.spinner(()=>
+			app.data.playlists.deleteRelated("rule", @id, e.detail.id)
+		).then((data)->
+			app.data.rules.deleteById(e.detail.id)
+		).catch((error)->
+			throw error
 		)
-		app.xhr(
-			method: "DELETE"
-			url: "http://#{app.urlBase}:3000/api/Rules/#{e.detail.id}"
-		).then(()=>
-			@splice('rules', index, 1)
-		)
-	addRuleGroup: ()->
-		if @formattedRules.length > 0
-			key = @formattedRules[@formattedRules.length-1].key + 1
-		else
-			key = 0
-		@push("rules", {group: key})
 	toggleRules: ()->
 		@$.rulesExpand.toggleAttribute("rotate")
 		@$.rulesCollapse.toggle()
 	#!fold
 
 	#@fold Coumputers
+	#We need an array of arrays of each group, from an array just containing all rules with group # as a property
 	formatRules: (rules)->
+		console.log "formattingRules"
+		console.log @rules
 		map = {}
 		ret = []
-		if rules?
-			for rule in rules.base
-				@validateRule(rule)
+		for rule in @rules
+			#filter out all rules not beloinging to the playlist (because our rules data includes all rules)
+			if rule.playlistId == @id
+				#@validateRule(rule)
 				map[Number(rule.group)] = [] if !map[Number(rule.group)]?
 				map[Number(rule.group)].push(rule)
-			for key, group of map
-				ret.push({key: Number(key), rules: group})
+		for key, group of map
+			ret.push({key: Number(key), rules: group})
+		@set("formattedRules", ret)
+		console.log @formattedRules
 		return ret
 	#!fold
+
+	displayRule: (rule, group)->
+		if _$.intEqual(rule.playlistId, @id) and _$.intEqual(rule.group, group)
+			return true
+		return false
 
 	validateRule: (rule)->
 		if rule.ruleType == "rated" and rule.rule > 5
@@ -93,8 +114,8 @@ window.elements.playlist.base = {
 			for rule in group.rules
 				if @filters[rule.ruleType]?
 					ent = @filters[rule.ruleType](remaining, rule)
-					passingTracks = passingEntries.concat(ent)
-			remaining = _.uniq(passingEntries)
+					passingTracks = passingTracks.concat(ent)
+			remaining = _.uniq(passingTracks)
 		for track in remaining
 			@$.selector.select(track)
 	filters:
@@ -167,7 +188,7 @@ window.elements.playlist.base = {
 					console.log key
 					console.log property
 					data[key] = rule[key]
-				data.playlistId = @id
+				data.id = @id
 				app.upsert("rule", data, {id: rule.id}, true)
 		).then((data)=>
 			@filterTracks(@rules)
@@ -180,8 +201,7 @@ window.elements.playlist.detail = Polymer(_$.deepSafeExtend(window.elements.play
 	is: "playlist-detail"
 	created: ()->
 	ready: ()->
-		@filterTracks()
+		window.test = @
+		@formatRules()
 	attached: ()->
 }))
-
-console.log "playlist"

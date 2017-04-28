@@ -40,6 +40,11 @@
         notify: true,
         value: []
       },
+      tagsDB: {
+        type: Array,
+        notify: true,
+        value: []
+      },
       miscArray: {
         type: Array,
         notify: true,
@@ -54,22 +59,27 @@
         notify: true
       }
     },
-    observers: ["trackLevelObserver(tags.*)"],
-    trackLevelObserver: (function(_this) {
-      return function(changeRecord) {
-        return console.log(changeRecord);
-      };
-    })(this),
     ready: function() {
-      console.log("ready");
-      console.log(this.tags);
-      return setTimeout((function(_this) {
-        return function() {
-          return _this.push("tags", {
-            name: "testtag"
+      return this.$.tags.addEventListener("tag-added", (function(_this) {
+        return function(e) {
+          console.log(e);
+          _this.pop("tags", tags.legnth - 1);
+          console.log(_this.tags);
+          return app.data.findOrCreate("tag", {
+            name: e.detail
+          }).then(function(tag) {
+            return app.data.link({
+              model: "track",
+              id: _this.trackId
+            }, {
+              model: "tag",
+              id: tag.id
+            });
+          }).then(function(data) {
+            return console.log(_this.tags);
           });
         };
-      })(this), "2500");
+      })(this));
 
       /*
       		@addEventListener("tag-added", (e)=>

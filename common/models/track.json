@@ -19,13 +19,13 @@
     "googleId": {
       "type": "string"
     },
-		"trackNo": {
-			"type": "number"
-		},
-		"albumArtLink": {
-			"type": "string"
-		},
-		"playCount": {
+    "trackNo": {
+      "type": "number"
+    },
+    "albumArtLink": {
+      "type": "string"
+    },
+    "playCount": {
       "type": "number"
     },
     "sortDate": {
@@ -52,7 +52,7 @@
   },
   "validations": [],
   "relations": {
-		"tags": {
+    "tags": {
       "type": "hasAndBelongsToMany",
       "model": "tag"
     },
@@ -62,6 +62,25 @@
       "foreignKey": ""
     }
   },
-  "acls": [],
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$unauthenticated",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    }
+  ],
   "methods": []
 }

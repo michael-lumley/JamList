@@ -7,18 +7,22 @@ window.elements.rule.base = {
 		ruleType:
 			type: String
 			notify: true
+			value: ""
 		rule:
 			type: Number
 			notify: true
+			value: 0
 		greater:
 			type: Number
 			notify: true
+			value: 0
 		playlistId:
 			type: Number
 			notify: true
 		tagId:
 			type: Number
 			notify: true
+
 
 	#@fold Polymer Display Selectors
 	ruleTypeIs: (display, ruleType)-> #Polymer helper to determine which sub view to show
@@ -42,10 +46,8 @@ window.elements.rule.base = {
 	libraryTags: ()->
 		return app.tags
 	deleteRule: ()->
-		console.log "delete"
 		@fire('ruleDelete', {id: @id})
 	#!fold
-
 }
 
 window.elements.rule.detail =  Polymer(_$.deepSafeExtend(window.elements.rule.base, {
