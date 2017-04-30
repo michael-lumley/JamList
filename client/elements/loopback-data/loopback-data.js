@@ -15,11 +15,6 @@
       modelsPath: {
         type: String
       },
-      data: {
-        type: Object,
-        notify: true,
-        value: {}
-      },
       queue: {
         type: Object,
         value: {}
@@ -87,6 +82,7 @@
           var i, j, len, len1, model, modelData, modelKey, relationData, relationDefinition, relationIndex, relationKey, results;
           for (i = 0, len = models.length; i < len; i++) {
             model = models[i];
+            console.log("creating " + model.model);
             _this[model.model.pluralize()] = model.data;
             _this.models[model.model] = model;
           }
@@ -169,9 +165,11 @@
      */
     link: function(sideA, sideB) {
       var definitionA, obj, relation;
+      console.log("linking");
       definitionA = this.models[sideA.model.pluralize()];
       relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)];
       if (relation.type === "hasAndBelongsToMany") {
+        console.log("hasAndBelongs");
         return this.xhr({
           method: "PUT",
           url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id + "/" + (sideB.model.pluralize()) + "/rel/" + sideB.id,
@@ -184,11 +182,13 @@
         })(this));
       }
       if (relation.type === "hasMany") {
+        console.log("hasMany");
         sideA = swap;
         sideA = sideB;
         sideB = swap;
       }
       if (relation.type === "belongsTo") {
+        console.log("belongsTo");
         return this.xhr({
           method: "PATCH",
           url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id,
@@ -200,20 +200,23 @@
           )
         }).then((function(_this) {
           return function(data) {
-            console.log(sideA);
-            console.log(sideB);
             _this.push((sideB.model.pluralize()) + "." + (_this.getIndexById(sideB.model, sideB.id)) + "." + (sideA.model.pluralize()), _this.getById(sideA.model, sideA.id));
-            _this.set((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + (sideB.model.pluralize()), _this.getById(sideB.model, sideB.id));
-            console.log(_this[sideA.model.pluralize()][_this.getIndexById(sideA.model, sideA.id)]);
-            return console.log(_this[sideB.model.pluralize()][_this.getIndexById(sideB.model, sideB.id)]);
+            return _this.set((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + sideB.model, _this.getById(sideB.model, sideB.id));
           };
         })(this));
       }
     },
     observerFunction: function(changeEntry) {
-      var path;
+      var key, model, path, property;
       path = changeEntry.path.split(".");
-      if ((path[2] != null) && path.length < 4 && !Array.isArray(changeEntry.value)) {
+      console.log(path);
+      console.log(this.models);
+      model = this.models[path[0]];
+      key = path[1];
+      property = path[2];
+      if (path.length > 2 && (model.json.relations[property] == null) && !Array.isArray(changeEntry.value)) {
+        console.log("queuing");
+        console.log(changeEntry);
         return this.queueData(path[0], path[1], path[2], changeEntry.value);
       }
     },
@@ -259,6 +262,8 @@
       })(this));
     },
     queueData: function(model, key, localProp, value) {
+      console.log("queueing Data");
+      console.log(arguments);
       if (this.timeout != null) {
         window.clearTimeout(this.timeout);
       }

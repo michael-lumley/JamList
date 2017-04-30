@@ -86,7 +86,7 @@ window.elements.playlist.base = {
 		ret = []
 		for rule in @rules
 			#filter out all rules not beloinging to the playlist (because our rules data includes all rules)
-			if rule.playlistId == @id
+			if _$.intEqual(rule.playlist.id, @id)
 				#@validateRule(rule)
 				map[Number(rule.group)] = [] if !map[Number(rule.group)]?
 				map[Number(rule.group)].push(rule)
@@ -98,7 +98,7 @@ window.elements.playlist.base = {
 	#!fold
 
 	displayRule: (rule, group)->
-		if _$.intEqual(rule.playlistId, @id) and _$.intEqual(rule.group, group)
+		if _$.intEqual(rule.playlist.id, @id) and _$.intEqual(rule.group, group)
 			return true
 		return false
 
@@ -108,6 +108,11 @@ window.elements.playlist.base = {
 
 	#@fold-children Filtering
 	filterTracks: (rules)->
+		#first, deselect all of the old entries
+		selected = @$.selector.selected.slice(0)
+		for track in selected
+			console.log track
+			@$.selector.deselect(track)
 		remaining = @tracks
 		for group in @formattedRules
 			passingTracks = []
@@ -117,6 +122,7 @@ window.elements.playlist.base = {
 					passingTracks = passingTracks.concat(ent)
 			remaining = _.uniq(passingTracks)
 		for track in remaining
+			console.log track
 			@$.selector.select(track)
 	filters:
 		rated: (libraryEntries, rule)->

@@ -10,10 +10,6 @@ loopbackDataModel = {
 			type: String
 		modelsPath:
 			type: String
-		data:
-			type: Object
-			notify: true
-			value: {}
 		queue:
 			type: Object
 			value: {}
@@ -63,6 +59,7 @@ loopbackDataModel = {
 			)
 		).then((models)=>
 			for model in models
+				console.log "creating #{model.model}"
 				@[model.model.pluralize()] = model.data
 				@models[model.model] = model
 			# loop our queried models
@@ -111,9 +108,11 @@ loopbackDataModel = {
 
 	###
 	link: (sideA, sideB)->
+		console.log "linking"
 		definitionA = @models[sideA.model.pluralize()]
 		relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)]
 		if relation.type == "hasAndBelongsToMany"
+			console.log "hasAndBelongs"
 			return @xhr(
 				method: "PUT"
 				url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}/#{sideB.model.pluralize()}/rel/#{sideB.id}"
@@ -124,10 +123,12 @@ loopbackDataModel = {
 			)
 		#We process has / belongs relationships with the belongs on the A side, so switch if not
 		if relation.type == "hasMany"
+			console.log "hasMany"
 			sideA = swap
 			sideA = sideB
 			sideB = swap
 		if relation.type == "belongsTo"
+			console.log "belongsTo"
 			return @xhr(
 				method: "PATCH"
 				url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}"
@@ -135,19 +136,23 @@ loopbackDataModel = {
 				data:
 					"#{sideB.model}Id": sideB.id
 			).then((data)=>
-				console.log sideA
-				console.log sideB
 				@push("#{sideB.model.pluralize()}.#{@getIndexById(sideB.model, sideB.id)}.#{sideA.model.pluralize()}", @getById(sideA.model, sideA.id))
-				@set("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model.pluralize()}", @getById(sideB.model, sideB.id))
-				console.log @[sideA.model.pluralize()][@getIndexById(sideA.model, sideA.id)]
-				console.log @[sideB.model.pluralize()][@getIndexById(sideB.model, sideB.id)]
+				@set("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model}", @getById(sideB.model, sideB.id))
 			)
 	#!fold
 
 	observerFunction: (changeEntry)->
 		path = changeEntry.path.split(".")
-		if path[2]? and path.length < 4 and !Array.isArray(changeEntry.value)
+		console.log path
+		console.log @models
+		model = @models[path[0]]
+		key = path[1]
+		property = path[2]
+		if path.length > 2 and !model.json.relations[property]? and !Array.isArray(changeEntry.value)
+			console.log "queuing"
+			console.log changeEntry
 			@queueData(path[0], path[1], path[2], changeEntry.value)
+
 
 	#@fold XHR
 	findOrCreate: (model, data)->
@@ -180,6 +185,8 @@ loopbackDataModel = {
 			)
 		)
 	queueData: (model, key, localProp, value)->
+		console.log("queueing Data")
+		console.log(arguments)
 		window.clearTimeout(@timeout) if @timeout?
 		@queue[key] = {} if !@queue[key]?
 		@queue[key][localProp] = value

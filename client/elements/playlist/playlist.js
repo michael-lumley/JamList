@@ -104,7 +104,7 @@
       ref = this.rules;
       for (i = 0, len = ref.length; i < len; i++) {
         rule = ref[i];
-        if (rule.playlistId === this.id) {
+        if (_$.intEqual(rule.playlist.id, this.id)) {
           if (map[Number(rule.group)] == null) {
             map[Number(rule.group)] = [];
           }
@@ -123,7 +123,7 @@
       return ret;
     },
     displayRule: function(rule, group) {
-      if (_$.intEqual(rule.playlistId, this.id) && _$.intEqual(rule.group, group)) {
+      if (_$.intEqual(rule.playlist.id, this.id) && _$.intEqual(rule.group, group)) {
         return true;
       }
       return false;
@@ -134,15 +134,21 @@
       }
     },
     filterTracks: function(rules) {
-      var ent, group, i, j, k, len, len1, len2, passingTracks, ref, ref1, remaining, results, rule, track;
+      var ent, group, i, j, k, l, len, len1, len2, len3, passingTracks, ref, ref1, remaining, results, rule, selected, track;
+      selected = this.$.selector.selected.slice(0);
+      for (i = 0, len = selected.length; i < len; i++) {
+        track = selected[i];
+        console.log(track);
+        this.$.selector.deselect(track);
+      }
       remaining = this.tracks;
       ref = this.formattedRules;
-      for (i = 0, len = ref.length; i < len; i++) {
-        group = ref[i];
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        group = ref[j];
         passingTracks = [];
         ref1 = group.rules;
-        for (j = 0, len1 = ref1.length; j < len1; j++) {
-          rule = ref1[j];
+        for (k = 0, len2 = ref1.length; k < len2; k++) {
+          rule = ref1[k];
           if (this.filters[rule.ruleType] != null) {
             ent = this.filters[rule.ruleType](remaining, rule);
             passingTracks = passingTracks.concat(ent);
@@ -151,8 +157,9 @@
         remaining = _.uniq(passingTracks);
       }
       results = [];
-      for (k = 0, len2 = remaining.length; k < len2; k++) {
-        track = remaining[k];
+      for (l = 0, len3 = remaining.length; l < len3; l++) {
+        track = remaining[l];
+        console.log(track);
         results.push(this.$.selector.select(track));
       }
       return results;
