@@ -161,25 +161,46 @@
       return _$.falsifyUndefined(this.getByPolymerKey(model, key).id);
     },
 
-    /* @fold Relations
+    /* Links two model instances
+    		side:
+    			type (String)
+    			id (int)
      */
     link: function(sideA, sideB) {
-      var definitionA, obj, relation;
+      var aData, bData, definitionA, entry, i, j, len, len1, linked, obj, ref, ref1, relation;
       console.log("linking");
+      aData = this.getById(sideA.model, sideA.id);
+      bData = this.getById(sideB.model, sideB.id);
       definitionA = this.models[sideA.model.pluralize()];
       relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)];
+      linked = false;
       if (relation.type === "hasAndBelongsToMany") {
-        console.log("hasAndBelongs");
-        return this.xhr({
-          method: "PUT",
-          url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id + "/" + (sideB.model.pluralize()) + "/rel/" + sideB.id,
-          headers: this.buildHeader()
-        }).then((function(_this) {
-          return function(data) {
-            _this.push((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + (sideB.model.pluralize()), _this.getById(sideB.model, sideB.id));
-            return _this.push((sideB.model.pluralize()) + "." + (_this.getIndexById(sideB.model, sideB.id)) + "." + (sideA.model.pluralize()), _this.getById(sideA.model, sideA.id));
-          };
-        })(this));
+        ref = aData[sideB.model.pluralize()];
+        for (i = 0, len = ref.length; i < len; i++) {
+          entry = ref[i];
+          if (_$.intEqual(entry.id, sideB.id)) {
+            linked = true;
+          }
+        }
+        ref1 = bData[sideA.model.pluralize()];
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          entry = ref1[j];
+          if (_$.intEqual(entry.id, sideA.id)) {
+            linked = true;
+          }
+        }
+        if (!linked) {
+          return this.xhr({
+            method: "PUT",
+            url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id + "/" + (sideB.model.pluralize()) + "/rel/" + sideB.id,
+            headers: this.buildHeader()
+          }).then((function(_this) {
+            return function(data) {
+              _this.push((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + (sideB.model.pluralize()), bData);
+              return _this.push((sideB.model.pluralize()) + "." + (_this.getIndexById(sideB.model, sideB.id)) + "." + (sideA.model.pluralize()), aData);
+            };
+          })(this));
+        }
       }
       if (relation.type === "hasMany") {
         console.log("hasMany");
@@ -189,35 +210,44 @@
       }
       if (relation.type === "belongsTo") {
         console.log("belongsTo");
-        return this.xhr({
-          method: "PATCH",
-          url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id,
-          headers: this.buildHeader(),
-          data: (
-            obj = {},
-            obj[sideB.model + "Id"] = sideB.id,
-            obj
-          )
-        }).then((function(_this) {
-          return function(data) {
-            _this.push((sideB.model.pluralize()) + "." + (_this.getIndexById(sideB.model, sideB.id)) + "." + (sideA.model.pluralize()), _this.getById(sideA.model, sideA.id));
-            return _this.set((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + sideB.model, _this.getById(sideB.model, sideB.id));
-          };
-        })(this));
+        if (aData[sideB.model] === bData) {
+          linked = true;
+        }
+        if (!linked) {
+          return this.xhr({
+            method: "PATCH",
+            url: "http://localhost:3000/api/" + (sideA.model.pluralize()) + "/" + sideA.id,
+            headers: this.buildHeader(),
+            data: (
+              obj = {},
+              obj[sideB.model + "Id"] = sideB.id,
+              obj
+            )
+          }).then((function(_this) {
+            return function(data) {
+              _this.push((sideB.model.pluralize()) + "." + (_this.getIndexById(sideB.model, sideB.id)) + "." + (sideA.model.pluralize()), aData);
+              return _this.set((sideA.model.pluralize()) + "." + (_this.getIndexById(sideA.model, sideA.id)) + "." + sideB.model, bData);
+            };
+          })(this));
+        }
       }
+      return Promise.resolve();
     },
     observerFunction: function(changeEntry) {
       var key, model, path, property;
-      path = changeEntry.path.split(".");
-      console.log(path);
-      console.log(this.models);
-      model = this.models[path[0]];
-      key = path[1];
-      property = path[2];
-      if (path.length > 2 && (model.json.relations[property] == null) && !Array.isArray(changeEntry.value)) {
-        console.log("queuing");
-        console.log(changeEntry);
-        return this.queueData(path[0], path[1], path[2], changeEntry.value);
+      console.log(this.isEnabled());
+      if (this.isEnabled()) {
+        path = changeEntry.path.split(".");
+        console.log(path);
+        console.log(this.models);
+        model = this.models[path[0]];
+        key = path[1];
+        property = path[2];
+        if (path.length > 2 && (model.json.relations[property] == null) && !Array.isArray(changeEntry.value)) {
+          console.log("queuing");
+          console.log(changeEntry);
+          return this.queueData(path[0], path[1], path[2], changeEntry.value);
+        }
       }
     },
     findOrCreate: function(model, data) {
@@ -348,6 +378,12 @@
       return {
         Authorization: app.user.jamlist.token
       };
+    },
+    isEnabled: function() {
+      if (app.status === "syncWithService") {
+        return false;
+      }
+      return true;
     },
     is: "jamlist-data"
   }));

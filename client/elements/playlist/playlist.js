@@ -138,7 +138,6 @@
       selected = this.$.selector.selected.slice(0);
       for (i = 0, len = selected.length; i < len; i++) {
         track = selected[i];
-        console.log(track);
         this.$.selector.deselect(track);
       }
       remaining = this.tracks;
@@ -159,7 +158,6 @@
       results = [];
       for (l = 0, len3 = remaining.length; l < len3; l++) {
         track = remaining[l];
-        console.log(track);
         results.push(this.$.selector.select(track));
       }
       return results;

@@ -16,6 +16,10 @@ window.elements.app = Polymer(
 		rules:
 			type: Array
 			notify: true
+		status: # A string used to determine the status of the app (used by loopback-data to disable live syncing)
+			type: String
+			notify: true
+			value: "active"
 		tags:
 			type: Array
 			notify: true
@@ -101,6 +105,7 @@ window.elements.app = Polymer(
 			).then((data)=>
 				Cookies.set("token", data.id)
 				Cookies.set("user", data.userId)
+				@user.jamlist.token = data.id
 				@data.load()
 				@set("path", "tracks")
 			)
@@ -196,42 +201,10 @@ window.elements.app = Polymer(
 			app.route = "test"
 	###
 	# !fold-children
-	upsert: (type, data = {}, where = {}, force = false)->
-		#TODO: Check library data against incoming data after an id match is found so we 'update' rather than 'skip'
-		return new Promise((resolve, reject)=>
-			if !force
-				if type == "tag"
-					tag = _.findWhere(@tags, where)
-					if tag?
-						console.log "skipped tag"
-						resolve(tag)
-						return
-				else if type == "track"
-					track = _.find(@tracks, (item)->
-						for property, value of where
-							if item.track[property] != value
-								return false
-							else
-								return true
-					)
-					if track?
-						console.log "skipped track"
-						resolve(libraryEntry.track)
-						return
-			where.jlUser = Cookies.get("user")
-			data.jlUserId = Cookies.get("user")
-			@xhr(
-				method: "POST"
-				url: "http://#{@urlBase}:3000/api/#{tyloginpe.pluralize()}/upsertWithWhere"
-				data: data
-				qs:
-					where: where
-			).then((data)=>
-				resolve(data)
-			)
-		)
 	syncWithService: (syncPlaylists = false)->
-		console.log "syncWithService"
+		console.log "starting sync"
+		ops = [] #an array for all async operations needed to complete sync. When done, resolve promise
+		@status = "syncWithService"
 		return new Promise((resolve, reject)=>
 			tracks = @portal.sendMessage({
 				target: "google_music"
@@ -246,67 +219,60 @@ window.elements.app = Polymer(
 				console.log data
 				serviceTracks = data[0].tracks
 				servicePlaylists = data[1].playlists
-
+				###
 				for track, key in serviceTracks
 					do (track)=>
 						if key < 3
 							console.log track
-							###
-							if !@find("libraryEntry", (entry)-> entry.track.googleId == track[0])
-								@upsertTrack(track).then((data)=>
-									@add("libraryEntry", {
-										playCount: track.playCount
-										rating: track.rating
-										trackId: data.id
-									})
-								)
-							###
-				for playlist, key in servicePlaylists
-					do (playlist)=>
-						if key < 2
-							globalTag = {}
-							console.log playlist
-							Promise.resolve().then(()=>
-								@upsert("tag", {name: playlist.name}, {name: playlist.name})
-							).then((tag)=>
-								console.log tag
-								globalTag = tag
-								@portal.sendMessage({
+				###
+				_$.forPromise(servicePlaylists, (playlist, key)=>
+					return new Promise((resolve, reject)=>
+						console.log key
+						if key < 999
+							do (playlist)=>
+								tag = @data.findOrCreate("tag", {name: playlist.name})
+								tracks = @portal.sendMessage({
 									target: "background"
 									fn: "playlist"
 									args:
 										id: playlist.id
 								})
-							).then((playlistTracks)=>
-								for track, key in playlistTracks
-									@upsert("track", track, {title: track.title, artist: track.artist, millisduration: track.millisduration}).then((track)=>
-										@xhr(
-											type: "PUT"
-											url: "http://#{@urlBase}:3000/api/tags/#{globalTag.id}/tracks/rel/#{track.id}"
+								Promise.all([tag, tracks]).then((data)=>
+									tag = data[0]
+									tracks = data[1]
+									_$.forPromise(tracks, (track, key)=>
+										@data.findOrCreate("track", {
+											title: track.title,
+											artist: track.artist,
+											album: track.album,
+											millisduration: track.millisduration
+										}).then((track)=>
+											console.log "linking #{tag.name} with #{track.title}"
+											console.log "#{track.title} - #{track.tags.length}"
+											@data.link({
+												model: "tag"
+												id: tag.id
+											},{
+												model: "track"
+												id: track.id
+											}).then(()=>
+												console.log "done linking"
+												console.log "#{track.title} - #{track.tags.length}"
+											)
 										)
+									).then(()=>
+										resolve()
 									)
-							)
-				resolve()
-			)
-			###
-			.then((response)=>
-				console.log googleTracks
-				for track, key in googleTracks
-					do (track) =>
-						if key < 60
-							if !@find("libraryEntry", (entry)-> entry.track.googleId == track[0])?
-								console.log "upserting"
-								@upsertTrack(track).then((data)=>
-									console.log "#{track[22]} - #{track[23]} - #{track[1]} - #{track[3]}"
-									@add("libraryEntry", {
-										playCount: track[22]
-										rating: track[23]
-										trackId: data.id
-									})
+								).catch((error)=>
+									@fail(error)
+									resolve()
 								)
+					)
+				)
+			).then((data)=>
+				app.status = "active"
 				resolve()
 			)
-			###
 		)
 	loadJamListData: ()->
 		#TODO user authentication

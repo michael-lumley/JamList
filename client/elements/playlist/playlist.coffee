@@ -111,7 +111,6 @@ window.elements.playlist.base = {
 		#first, deselect all of the old entries
 		selected = @$.selector.selected.slice(0)
 		for track in selected
-			console.log track
 			@$.selector.deselect(track)
 		remaining = @tracks
 		for group in @formattedRules
@@ -122,7 +121,6 @@ window.elements.playlist.base = {
 					passingTracks = passingTracks.concat(ent)
 			remaining = _.uniq(passingTracks)
 		for track in remaining
-			console.log track
 			@$.selector.select(track)
 	filters:
 		rated: (libraryEntries, rule)->

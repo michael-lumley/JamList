@@ -75,49 +75,6 @@
 			playlists="{{playlists}}"
 			rules="{{rules}}"
 		></jamlist-data>
-
-
-		<!--<loopback-data-model
-			id="track-data"
-			model="tracks"
-			url-root="localhost:3000/api"
-			where='{"jlUserId": "lumleym"}'
-			include='{"relation": "tags"}'
-			has-many='[]'
-			has-belongs-many='["tags"]'
-			data="{{tracks}}"
-		></loopback-data-model>
-		<loopback-data-model
-			id="tag-data"
-			model="tags"
-			url-root="localhost:3000/api"
-			where='{"jlUserId": "lumleym"}'
-			include=''
-			has-many='[]'
-			has-belongs-many='["tracks"]'
-			data="{{tags}}"
-		></loopback-data-model>
-		<loopback-data-model
-			id="playlist-data"
-			model="playlists"
-			url-root="localhost:3000/api"
-			where='{"jlUserId": "lumleym"}'
-			include='{"relation": "rules"}'
-			has-many='["rules"]'
-			has-belongs-many='[]'
-			data="{{playlists}}"
-		></loopback-data-model>
-		<loopback-data-model
-			id="rule-data"
-			model="rules"
-			url-root="localhost:3000/api"
-			where='{"jlUserId": "lumleym"}'
-			include=''
-			has-many='[]'
-			has-belongs-many='[]'
-			data="{{rules}}"
-		></loopback-data-model>-->
-			<!--@fold-->
 		<div key="app">
 			<paper-tabs selected="{{path}}" attr-for-selected="key">
 				<paper-tab key="tracks" on-click=""><iron-icon icon="av:library-music"></iron-icon>&nbsp;Tracks</paper-tab>
@@ -160,7 +117,9 @@
 						tags="{{tags}}"
 					></playlist-list>
 				</div>
-				<div key="settings">USER</div>
+				<div key="settings">
+					<paper-button label="Sync With Service" on-click="syncWithService">Sync With Service</paper-button>
+				</div>
 				<!--!fold-->
 			</iron-pages>
 		</div>

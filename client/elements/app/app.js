@@ -22,6 +22,11 @@
         type: Array,
         notify: true
       },
+      status: {
+        type: String,
+        notify: true,
+        value: "active"
+      },
       tags: {
         type: Array,
         notify: true
@@ -115,6 +120,7 @@
           }).then(function(data) {
             Cookies.set("token", data.id);
             Cookies.set("user", data.userId);
+            _this.user.jamlist.token = data.id;
             _this.data.load();
             return _this.set("path", "tracks");
           });
@@ -215,66 +221,14 @@
     		test: ()->
     			app.route = "test"
      */
-    upsert: function(type, data, where, force) {
-      if (data == null) {
-        data = {};
-      }
-      if (where == null) {
-        where = {};
-      }
-      if (force == null) {
-        force = false;
-      }
-      return new Promise((function(_this) {
-        return function(resolve, reject) {
-          var tag, track;
-          if (!force) {
-            if (type === "tag") {
-              tag = _.findWhere(_this.tags, where);
-              if (tag != null) {
-                console.log("skipped tag");
-                resolve(tag);
-                return;
-              }
-            } else if (type === "track") {
-              track = _.find(_this.tracks, function(item) {
-                var property, value;
-                for (property in where) {
-                  value = where[property];
-                  if (item.track[property] !== value) {
-                    return false;
-                  } else {
-                    return true;
-                  }
-                }
-              });
-              if (track != null) {
-                console.log("skipped track");
-                resolve(libraryEntry.track);
-                return;
-              }
-            }
-          }
-          where.jlUser = Cookies.get("user");
-          data.jlUserId = Cookies.get("user");
-          return _this.xhr({
-            method: "POST",
-            url: "http://" + _this.urlBase + ":3000/api/" + (tyloginpe.pluralize()) + "/upsertWithWhere",
-            data: data,
-            qs: {
-              where: where
-            }
-          }).then(function(data) {
-            return resolve(data);
-          });
-        };
-      })(this));
-    },
     syncWithService: function(syncPlaylists) {
+      var ops;
       if (syncPlaylists == null) {
         syncPlaylists = false;
       }
-      console.log("syncWithService");
+      console.log("starting sync");
+      ops = [];
+      this.status = "syncWithService";
       return new Promise((function(_this) {
         return function(resolve, reject) {
           var playlists, tracks;
@@ -287,97 +241,71 @@
             fn: "allPlaylists"
           });
           return Promise.all([tracks, playlists]).then(function(data) {
-            var fn1, fn2, i, j, key, len, len1, playlist, servicePlaylists, serviceTracks, track;
+            var servicePlaylists, serviceTracks;
             console.log(data);
             serviceTracks = data[0].tracks;
             servicePlaylists = data[1].playlists;
-            fn1 = function(track) {
-              if (key < 3) {
-                return console.log(track);
 
-                /*
-                							if !@find("libraryEntry", (entry)-> entry.track.googleId == track[0])
-                								@upsertTrack(track).then((data)=>
-                									@add("libraryEntry", {
-                										playCount: track.playCount
-                										rating: track.rating
-                										trackId: data.id
-                									})
-                								)
-                 */
-              }
-            };
-            for (key = i = 0, len = serviceTracks.length; i < len; key = ++i) {
-              track = serviceTracks[key];
-              fn1(track);
-            }
-            fn2 = function(playlist) {
-              var globalTag;
-              if (key < 2) {
-                globalTag = {};
-                console.log(playlist);
-                return Promise.resolve().then(function() {
-                  return _this.upsert("tag", {
-                    name: playlist.name
-                  }, {
-                    name: playlist.name
-                  });
-                }).then(function(tag) {
-                  console.log(tag);
-                  globalTag = tag;
-                  return _this.portal.sendMessage({
-                    target: "background",
-                    fn: "playlist",
-                    args: {
-                      id: playlist.id
-                    }
-                  });
-                }).then(function(playlistTracks) {
-                  var k, len2, results;
-                  results = [];
-                  for (key = k = 0, len2 = playlistTracks.length; k < len2; key = ++k) {
-                    track = playlistTracks[key];
-                    results.push(_this.upsert("track", track, {
-                      title: track.title,
-                      artist: track.artist,
-                      millisduration: track.millisduration
-                    }).then(function(track) {
-                      return _this.xhr({
-                        type: "PUT",
-                        url: "http://" + _this.urlBase + ":3000/api/tags/" + globalTag.id + "/tracks/rel/" + track.id
+            /*
+            				for track, key in serviceTracks
+            					do (track)=>
+            						if key < 3
+            							console.log track
+             */
+            return _$.forPromise(servicePlaylists, function(playlist, key) {
+              return new Promise(function(resolve, reject) {
+                console.log(key);
+                if (key < 999) {
+                  return (function(playlist) {
+                    var tag;
+                    tag = _this.data.findOrCreate("tag", {
+                      name: playlist.name
+                    });
+                    tracks = _this.portal.sendMessage({
+                      target: "background",
+                      fn: "playlist",
+                      args: {
+                        id: playlist.id
+                      }
+                    });
+                    return Promise.all([tag, tracks]).then(function(data) {
+                      tag = data[0];
+                      tracks = data[1];
+                      return _$.forPromise(tracks, function(track, key) {
+                        return _this.data.findOrCreate("track", {
+                          title: track.title,
+                          artist: track.artist,
+                          album: track.album,
+                          millisduration: track.millisduration
+                        }).then(function(track) {
+                          console.log("linking " + tag.name + " with " + track.title);
+                          console.log(track.title + " - " + track.tags.length);
+                          return _this.data.link({
+                            model: "tag",
+                            id: tag.id
+                          }, {
+                            model: "track",
+                            id: track.id
+                          }).then(function() {
+                            console.log("done linking");
+                            return console.log(track.title + " - " + track.tags.length);
+                          });
+                        });
+                      }).then(function() {
+                        return resolve();
                       });
-                    }));
-                  }
-                  return results;
-                });
-              }
-            };
-            for (key = j = 0, len1 = servicePlaylists.length; j < len1; key = ++j) {
-              playlist = servicePlaylists[key];
-              fn2(playlist);
-            }
+                    })["catch"](function(error) {
+                      _this.fail(error);
+                      return resolve();
+                    });
+                  })(playlist);
+                }
+              });
+            });
+          }).then(function(data) {
+            app.status = "active";
             return resolve();
           });
-
-          /*
-          			.then((response)=>
-          				console.log googleTracks
-          				for track, key in googleTracks
-          					do (track) =>
-          						if key < 60
-          							if !@find("libraryEntry", (entry)-> entry.track.googleId == track[0])?
-          								console.log "upserting"
-          								@upsertTrack(track).then((data)=>
-          									console.log "#{track[22]} - #{track[23]} - #{track[1]} - #{track[3]}"
-          									@add("libraryEntry", {
-          										playCount: track[22]
-          										rating: track[23]
-          										trackId: data.id
-          									})
-          								)
-          				resolve()
-          			)
-           */
         };
       })(this));
     },

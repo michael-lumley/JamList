@@ -104,54 +104,76 @@ loopbackDataModel = {
 		_$.falsifyUndefined(@getByPolymerKey(model, key).id)
 	#!fold
 
-	### @fold Relations
-
+	# @fold-children Relations
+	### Links two model instances
+		side:
+			type (String)
+			id (int)
 	###
 	link: (sideA, sideB)->
 		console.log "linking"
+		#load necessary additional data
+		aData = @getById(sideA.model, sideA.id)
+		bData = @getById(sideB.model, sideB.id)
 		definitionA = @models[sideA.model.pluralize()]
 		relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)]
+		linked = false #for check if these items are already linked
+		#deterine what kind of link we have prior to operation
 		if relation.type == "hasAndBelongsToMany"
-			console.log "hasAndBelongs"
-			return @xhr(
-				method: "PUT"
-				url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}/#{sideB.model.pluralize()}/rel/#{sideB.id}"
-				headers: @buildHeader()
-			).then((data)=>
-				@push("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model.pluralize()}", @getById(sideB.model, sideB.id))
-				@push("#{sideB.model.pluralize()}.#{@getIndexById(sideB.model, sideB.id)}.#{sideA.model.pluralize()}", @getById(sideA.model, sideA.id))
-			)
-		#We process has / belongs relationships with the belongs on the A side, so switch if not
+			#Determine if these models are already linked
+			for entry in aData[sideB.model.pluralize()]
+				linked = true if _$.intEqual(entry.id, sideB.id)
+			for entry in bData[sideA.model.pluralize()]
+				linked = true if _$.intEqual(entry.id, sideA.id)
+			#Link the Items
+			if !linked
+				return @xhr(
+					method: "PUT"
+					url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}/#{sideB.model.pluralize()}/rel/#{sideB.id}"
+					headers: @buildHeader()
+				).then((data)=>
+					@push("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model.pluralize()}", bData)
+					@push("#{sideB.model.pluralize()}.#{@getIndexById(sideB.model, sideB.id)}.#{sideA.model.pluralize()}", aData)
+				)
 		if relation.type == "hasMany"
+			#We process has / belongs relationships with the belongs on the A side, so switch if not
 			console.log "hasMany"
 			sideA = swap
 			sideA = sideB
 			sideB = swap
 		if relation.type == "belongsTo"
 			console.log "belongsTo"
-			return @xhr(
-				method: "PATCH"
-				url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}"
-				headers: @buildHeader()
-				data:
-					"#{sideB.model}Id": sideB.id
-			).then((data)=>
-				@push("#{sideB.model.pluralize()}.#{@getIndexById(sideB.model, sideB.id)}.#{sideA.model.pluralize()}", @getById(sideA.model, sideA.id))
-				@set("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model}", @getById(sideB.model, sideB.id))
-			)
-	#!fold
+			if aData[sideB.model] == bData
+				linked = true
+			if !linked
+				return @xhr(
+					method: "PATCH"
+					url: "http://localhost:3000/api/#{sideA.model.pluralize()}/#{sideA.id}"
+					headers: @buildHeader()
+					data:
+						"#{sideB.model}Id": sideB.id
+				).then((data)=>
+					@push("#{sideB.model.pluralize()}.#{@getIndexById(sideB.model, sideB.id)}.#{sideA.model.pluralize()}", aData)
+					@set("#{sideA.model.pluralize()}.#{@getIndexById(sideA.model, sideA.id)}.#{sideB.model}", bData)
+				)
+		return Promise.resolve()
+		#
+	#!fold-children
 
 	observerFunction: (changeEntry)->
-		path = changeEntry.path.split(".")
-		console.log path
-		console.log @models
-		model = @models[path[0]]
-		key = path[1]
-		property = path[2]
-		if path.length > 2 and !model.json.relations[property]? and !Array.isArray(changeEntry.value)
-			console.log "queuing"
-			console.log changeEntry
-			@queueData(path[0], path[1], path[2], changeEntry.value)
+		# is Enabled is a method set in the extension class to disable/enable the observer if we want to make unobserved changes
+		console.log @isEnabled()
+		if @isEnabled()
+			path = changeEntry.path.split(".")
+			console.log path
+			console.log @models
+			model = @models[path[0]]
+			key = path[1]
+			property = path[2]
+			if path.length > 2 and !model.json.relations[property]? and !Array.isArray(changeEntry.value)
+				console.log "queuing"
+				console.log changeEntry
+				@queueData(path[0], path[1], path[2], changeEntry.value)
 
 
 	#@fold XHR
@@ -253,5 +275,9 @@ Polymer(_$.deepSafeExtend(loopbackDataModel, {
 		return {
 			Authorization: app.user.jamlist.token
 		}
+	isEnabled: ()->
+		if app.status == "syncWithService"
+			return false
+		return true
 	is: "jamlist-data"
 }))
