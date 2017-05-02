@@ -117,90 +117,13 @@ window.elements.app = Polymer(
 			page("/login")
 		)
 	# !fold
+
 	#Router and Display @fold-children
 	pathChange: (path)->
 		window.location.hash = "#/" + path
-	###
-	router: ()->
-		url = location.hash.slice(1) || '/';
-		route = @routes.prelim(url.substr(1))
-			.then((route)=>
-				if route and @routes[route]?
-					@routes[route]()
-			).catch((error)=>
-				console.log error
-			)
-	routerSetup: ()->login
-			return new Promise((resolve, reject)=>
-				if path == "/"
-					app.setRoute("tracks")
-					reject()
-				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
-					app.setRoute("login")
-					reject()
-				else
-					resolve(path)
-			)
-		login: ()->
-			console.log "setting path"
-			app.route = "login"listen for child element events
-		app: ()->
-			app.route = "app"
-		sync: ()->
-			console.log "syncing"
-			app.user.deferred.then(()=>
-				console.log "user resolved"
-				app.syncWithService()
-			)
-		test: ()->
-			app.route = "test"
-	###
 	# !fold-children
-	###
-	router: ()->
-		url = location.hash.slice(1) || '/';
-		route = @routes.prelim(url.substr(1))
-			.then((route)=>
-				if route and @routes[route]?
-					@routes[route]()
-			).catch((error)=>
-				console.log error
-			)
-	routerSetup: ()->
-		window.addEventListener('hashchange', @router.bind(@))
-		window.addEventListener('load', @router.bind(@))
-		#@router()
-	setRoute: (route)->
-		window.location.hash = "#/" + route;
-	routes:
-		prelim: (path)->
-		# Returns False if Prelim Sets a new Route, otherwise returns routes[fn] to be called
-			console.log path
-			return new Promise((resolve, reject)=>
-				if path == "/"
-					app.setRoute("tracks")
-					reject()
-				if path != "login" and (!Cookies.get("user")? or !Cookies.get("token")?)
-					app.setRoute("login")
-					reject()
-				else
-					resolve(path)
-			)
-		login: ()->
-			console.log "setting path"
-			app.route = "login"
-		app: ()->
-			app.route = "app"
-		sync: ()->
-			console.log "syncing"
-			app.user.deferred.then(()=>
-				console.log "user resolved"
-				app.syncWithService()
-			)
-		test: ()->
-			app.route = "test"
-	###
-	# !fold-children
+
+	#@fold
 	syncWithService: (syncPlaylists = false)->
 		console.log "starting sync"
 		ops = [] #an array for all async operations needed to complete sync. When done, resolve promise

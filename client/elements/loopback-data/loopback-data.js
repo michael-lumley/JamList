@@ -167,7 +167,7 @@
     			id (int)
      */
     link: function(sideA, sideB) {
-      var aData, bData, definitionA, entry, i, j, len, len1, linked, obj, ref, ref1, relation;
+      var aData, bData, definitionA, entry, linked, obj, relation;
       console.log("linking");
       aData = this.getById(sideA.model, sideA.id);
       bData = this.getById(sideB.model, sideB.id);
@@ -175,16 +175,12 @@
       relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)];
       linked = false;
       if (relation.type === "hasAndBelongsToMany") {
-        ref = aData[sideB.model.pluralize()];
-        for (i = 0, len = ref.length; i < len; i++) {
-          entry = ref[i];
+        for (entry in aData[sideB.model.pluralize()]) {
           if (_$.intEqual(entry.id, sideB.id)) {
             linked = true;
           }
         }
-        ref1 = bData[sideA.model.pluralize()];
-        for (j = 0, len1 = ref1.length; j < len1; j++) {
-          entry = ref1[j];
+        for (entry in bData[sideA.model.pluralize()]) {
           if (_$.intEqual(entry.id, sideA.id)) {
             linked = true;
           }
@@ -235,6 +231,7 @@
     },
     observerFunction: function(changeEntry) {
       var key, model, path, property;
+      console.log(changeEntry);
       console.log(this.isEnabled());
       if (this.isEnabled()) {
         path = changeEntry.path.split(".");

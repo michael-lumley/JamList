@@ -121,9 +121,9 @@ loopbackDataModel = {
 		#deterine what kind of link we have prior to operation
 		if relation.type == "hasAndBelongsToMany"
 			#Determine if these models are already linked
-			for entry in aData[sideB.model.pluralize()]
+			for entry of aData[sideB.model.pluralize()]
 				linked = true if _$.intEqual(entry.id, sideB.id)
-			for entry in bData[sideA.model.pluralize()]
+			for entry of bData[sideA.model.pluralize()]
 				linked = true if _$.intEqual(entry.id, sideA.id)
 			#Link the Items
 			if !linked
@@ -161,6 +161,7 @@ loopbackDataModel = {
 	#!fold-children
 
 	observerFunction: (changeEntry)->
+		console.log changeEntry
 		# is Enabled is a method set in the extension class to disable/enable the observer if we want to make unobserved changes
 		console.log @isEnabled()
 		if @isEnabled()
