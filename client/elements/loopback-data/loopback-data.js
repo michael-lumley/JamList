@@ -142,8 +142,6 @@
     		Index: native array index
      */
     getByProperties: function(model, properties) {
-      console.log(model.pluralize());
-      console.log(_.findWhere(this[model.pluralize()], properties));
       return _$.falsifyUndefined(_.findWhere(this[model.pluralize()], properties));
     },
     getById: function(model, id) {
@@ -168,7 +166,6 @@
      */
     link: function(sideA, sideB) {
       var aData, bData, definitionA, entry, linked, obj, relation;
-      console.log("linking");
       aData = this.getById(sideA.model, sideA.id);
       bData = this.getById(sideB.model, sideB.id);
       definitionA = this.models[sideA.model.pluralize()];
@@ -231,18 +228,12 @@
     },
     observerFunction: function(changeEntry) {
       var key, model, path, property;
-      console.log(changeEntry);
-      console.log(this.isEnabled());
       if (this.isEnabled()) {
         path = changeEntry.path.split(".");
-        console.log(path);
-        console.log(this.models);
         model = this.models[path[0]];
         key = path[1];
         property = path[2];
         if (path.length > 2 && (model.json.relations[property] == null) && !Array.isArray(changeEntry.value)) {
-          console.log("queuing");
-          console.log(changeEntry);
           return this.queueData(path[0], path[1], path[2], changeEntry.value);
         }
       }

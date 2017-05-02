@@ -173,7 +173,6 @@
              */
             return _$.forPromise(servicePlaylists, function(playlist, key) {
               return new Promise(function(resolve, reject) {
-                console.log(key);
                 if (key < 999) {
                   return (function(playlist) {
                     var tag;
@@ -190,24 +189,19 @@
                     return Promise.all([tag, tracks]).then(function(data) {
                       tag = data[0];
                       tracks = data[1];
-                      return _$.forPromise(tracks, function(track, key) {
+                      return _$.allForPromise(tracks, function(track, key) {
                         return _this.data.findOrCreate("track", {
                           title: track.title,
                           artist: track.artist,
                           album: track.album,
                           millisduration: track.millisduration
                         }).then(function(track) {
-                          console.log("linking " + tag.name + " with " + track.title);
-                          console.log(track.title + " - " + track.tags.length);
                           return _this.data.link({
                             model: "tag",
                             id: tag.id
                           }, {
                             model: "track",
                             id: track.id
-                          }).then(function() {
-                            console.log("done linking");
-                            return console.log(track.title + " - " + track.tags.length);
                           });
                         });
                       }).then(function() {

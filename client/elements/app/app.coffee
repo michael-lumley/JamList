@@ -150,7 +150,6 @@ window.elements.app = Polymer(
 				###
 				_$.forPromise(servicePlaylists, (playlist, key)=>
 					return new Promise((resolve, reject)=>
-						console.log key
 						if key < 999
 							do (playlist)=>
 								tag = @data.findOrCreate("tag", {name: playlist.name})
@@ -163,25 +162,20 @@ window.elements.app = Polymer(
 								Promise.all([tag, tracks]).then((data)=>
 									tag = data[0]
 									tracks = data[1]
-									_$.forPromise(tracks, (track, key)=>
+									_$.allForPromise(tracks, (track, key)=>
 										@data.findOrCreate("track", {
 											title: track.title,
 											artist: track.artist,
 											album: track.album,
 											millisduration: track.millisduration
 										}).then((track)=>
-											console.log "linking #{tag.name} with #{track.title}"
-											console.log "#{track.title} - #{track.tags.length}"
 											@data.link({
 												model: "tag"
 												id: tag.id
 											},{
 												model: "track"
 												id: track.id
-											}).then(()=>
-												console.log "done linking"
-												console.log "#{track.title} - #{track.tags.length}"
-											)
+											})
 										)
 									).then(()=>
 										resolve()

@@ -89,8 +89,6 @@ loopbackDataModel = {
 		Index: native array index
 	###
 	getByProperties: (model, properties)->
-		console.log model.pluralize()
-		console.log _.findWhere(@[model.pluralize()], properties)
 		_$.falsifyUndefined(_.findWhere(@[model.pluralize()], properties))
 	getById: (model, id)->
 		_$.falsifyUndefined(_.find(@[model.pluralize()], (instData)->
@@ -111,7 +109,6 @@ loopbackDataModel = {
 			id (int)
 	###
 	link: (sideA, sideB)->
-		console.log "linking"
 		#load necessary additional data
 		aData = @getById(sideA.model, sideA.id)
 		bData = @getById(sideB.model, sideB.id)
@@ -161,19 +158,13 @@ loopbackDataModel = {
 	#!fold-children
 
 	observerFunction: (changeEntry)->
-		console.log changeEntry
 		# is Enabled is a method set in the extension class to disable/enable the observer if we want to make unobserved changes
-		console.log @isEnabled()
 		if @isEnabled()
 			path = changeEntry.path.split(".")
-			console.log path
-			console.log @models
 			model = @models[path[0]]
 			key = path[1]
 			property = path[2]
 			if path.length > 2 and !model.json.relations[property]? and !Array.isArray(changeEntry.value)
-				console.log "queuing"
-				console.log changeEntry
 				@queueData(path[0], path[1], path[2], changeEntry.value)
 
 
