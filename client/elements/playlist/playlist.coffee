@@ -108,20 +108,26 @@ window.elements.playlist.base = {
 
 	#@fold-children Filtering
 	filterTracks: (rules)->
+		console.log "filtering tracks"
 		#first, deselect all of the old entries
 		selected = @$.selector.selected.slice(0)
 		for track in selected
 			@$.selector.deselect(track)
 		remaining = @tracks
-		for group in @formattedRules
-			passingTracks = []
-			for rule in group.rules
-				if @filters[rule.ruleType]?
-					ent = @filters[rule.ruleType](remaining, rule)
-					passingTracks = passingTracks.concat(ent)
-			remaining = _.uniq(passingTracks)
-		for track in remaining
-			@$.selector.select(track)
+		console.log "all tracks removed"
+		console.log @formattedRules
+		if @formattedRules.length > 0
+			for group in @formattedRules
+				passingTracks = []
+				for rule in group.rules
+					if @filters[rule.ruleType]?
+						console.log "testing rule"
+						ent = @filters[rule.ruleType](remaining, rule)
+						passingTracks = passingTracks.concat(ent)
+				remaining = _.uniq(passingTracks)
+			for track in remaining
+				console.log track
+				@$.selector.select(track)
 	filters:
 		rated: (libraryEntries, rule)->
 			ret = []

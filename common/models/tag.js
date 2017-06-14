@@ -6,6 +6,18 @@
     		Q = require('q')
     		_ = require('underscore')
      */
+    Tag.prototype.addTracks = function(tracks, cb) {
+      var i, len, track, trackId;
+      for (i = 0, len = tracks.length; i < len; i++) {
+        trackId = tracks[i];
+        track = Tag.app.models.Track.findById(trackId, (function(_this) {
+          return function(err, track) {
+            return _this.tracks.add(track);
+          };
+        })(this));
+      }
+      return cb(null);
+    };
     Tag.merge = function(baseId, mergeId, name, cb) {
       var base, merge;
       console.log("merge call");
@@ -57,6 +69,23 @@
         });
       });
     };
+    Tag.remoteMethod("addTracks", {
+      isStatic: false,
+      accepts: [
+        {
+          arg: 'tracks',
+          type: 'array',
+          required: true
+        }
+      ],
+      http: {
+        path: '/tracks/linkById',
+        verb: 'post'
+      },
+      returns: {
+        root: true
+      }
+    });
     return Tag.remoteMethod("merge", {
       accepts: [
         {

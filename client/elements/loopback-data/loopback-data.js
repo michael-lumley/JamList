@@ -1,7 +1,5 @@
 (function() {
-  var loopbackDataModel;
-
-  console.log(querystring);
+  var constructor, loopbackDataModel;
 
   loopbackDataModel = {
     properties: {
@@ -15,15 +13,25 @@
       modelsPath: {
         type: String
       },
-      queue: {
+      patchQueue: {
         type: Object,
         value: {}
+      },
+      createQueue: {
+        type: Object,
+        value: {}
+      },
+      pendingRequests: {
+        type: Object,
+        value: {
+          create: {},
+          update: {}
+        }
       }
     },
     is: "loopback-data",
     ready: function() {
-      window.data = this;
-      return this.load();
+      return window.data = this;
     },
     load: function() {
       var key, models, property, ref;
@@ -95,7 +103,7 @@
               results1 = [];
               for (relationKey in ref1) {
                 relationDefinition = ref1[relationKey];
-                if (model.data[0][relationKey] != null) {
+                if ((model.data[0] != null) && (model.data[0][relationKey] != null)) {
                   results1.push((function() {
                     var k, len2, ref2, results2;
                     ref2 = model.data;
@@ -165,19 +173,23 @@
     			id (int)
      */
     link: function(sideA, sideB) {
-      var aData, bData, definitionA, entry, linked, obj, relation;
+      var aData, bData, definitionA, entry, key, linked, obj, ref, ref1, relation;
       aData = this.getById(sideA.model, sideA.id);
       bData = this.getById(sideB.model, sideB.id);
       definitionA = this.models[sideA.model.pluralize()];
       relation = definitionA.json.relations[sideB.model.pluralize()] || definitionA.json.relations[sideB.model.pluralize(false)];
       linked = false;
       if (relation.type === "hasAndBelongsToMany") {
-        for (entry in aData[sideB.model.pluralize()]) {
+        ref = aData[sideB.model.pluralize()];
+        for (key in ref) {
+          entry = ref[key];
           if (_$.intEqual(entry.id, sideB.id)) {
             linked = true;
           }
         }
-        for (entry in bData[sideA.model.pluralize()]) {
+        ref1 = bData[sideA.model.pluralize()];
+        for (key in ref1) {
+          entry = ref1[key];
           if (_$.intEqual(entry.id, sideA.id)) {
             linked = true;
           }
@@ -234,7 +246,7 @@
         key = path[1];
         property = path[2];
         if (path.length > 2 && (model.json.relations[property] == null) && !Array.isArray(changeEntry.value)) {
-          return this.queueData(path[0], path[1], path[2], changeEntry.value);
+          return this.patchQueueData(path[0], path[1], path[2], changeEntry.value);
         }
       }
     },
@@ -244,7 +256,13 @@
           var localData;
           if (data != null) {
             if (localData = _this.getByProperties(model, data)) {
-              resolve(localData);
+              if (localData.promise != null) {
+                localData.promise.then(function() {
+                  return resolve(localData);
+                });
+              } else {
+                resolve(localData);
+              }
             } else {
               return _this.create(model, data).then(function(data) {
                 return resolve(data);
@@ -257,53 +275,116 @@
       })(this));
     },
     create: function(model, data) {
-      return new Promise((function(_this) {
-        return function(resolve, reject) {
-          return _this.xhr({
-            method: "POST",
-            url: _this.buildUrl(_this.models[model.pluralize()]),
-            headers: _this.buildHeader(_this.models[model.pluralize()]),
-            data: data
-          }).then(function(data) {
-            var i, len, ref, relation;
-            ref = _this.models[model.pluralize()].property.relations;
-            for (i = 0, len = ref.length; i < len; i++) {
-              relation = ref[i];
-              if (relation.type !== "belongsTo") {
-                data[relation] = [];
-              }
+      var localModel, promise;
+      promise = this.bulkCreate(model, data).then((function(_this) {
+        return function(data) {
+          var i, len, ref, relation;
+          ref = _this.models[model.pluralize()].property.relations;
+          for (i = 0, len = ref.length; i < len; i++) {
+            relation = ref[i];
+            if (relation.type !== "belongsTo") {
+              localModel[relation] = [];
             }
-            _this.push("" + (model.pluralize()), data);
-            return resolve(data);
-          });
+          }
+          localModel.id = data.id;
+          localModel.promise = null;
+          return localModel;
         };
       })(this));
+      localModel = _.extend(data, {
+        promise: promise
+      });
+      this.push("" + (model.pluralize()), localModel);
+      return localModel.promise;
     },
-    queueData: function(model, key, localProp, value) {
+    bulkCreate: function(model, data) {
+      var index, outsideReject, outsideResolve, promise, sendData;
+      outsideResolve = false;
+      outsideReject = false;
+      promise = new Promise((function(_this) {
+        return function(resolve, reject) {
+          outsideResolve = resolve;
+          return outsideReject = reject;
+        };
+      })(this));
+      if (!this.pendingRequests.create[model]) {
+        this.pendingRequests.create[model] = {
+          data: [],
+          promises: []
+        };
+      }
+      index = this.pendingRequests.create[model].data.push(data) - 1;
+      this.pendingRequests.create[model].data[index].promiseIndex = index;
+      this.pendingRequests.create[model].promises[index] = {
+        promise: promise,
+        resolve: outsideResolve,
+        reject: outsideReject
+      };
+      sendData = (function(_this) {
+        return function(queue) {
+          for (model in queue) {
+            console.log(model);
+            _this.xhr({
+              method: "POST",
+              url: _this.buildUrl(_this.models[model.pluralize()]),
+              headers: _this.buildHeader(_this.models[model.pluralize()]),
+              data: JSON.stringify(queue[model].data),
+              contentType: "application/json"
+            }).then(function(data) {
+              var i, len, modelInstance, promiseIndex;
+              for (i = 0, len = data.length; i < len; i++) {
+                modelInstance = data[i];
+                promiseIndex = modelInstance.promiseIndex;
+                modelInstance.promiseIndex = null;
+                queue[model].promises[promiseIndex].resolve(modelInstance);
+              }
+            });
+          }
+        };
+      })(this);
+      this.createTimeout = window.setTimeout((function(_this) {
+        return function() {
+          sendData(_this.pendingRequests.create);
+          return _this.pendingRequests.create = [];
+        };
+      })(this), "500");
+      if (this.pendingRequests.create[model].data.length > 250) {
+        sendData(this.pendingRequests.create);
+        this.pendingRequests.create = [];
+        if (this.createTimeout != null) {
+          window.clearTimeout(this.createTimeout);
+        }
+      }
+      return promise;
+    },
+    bulkUpdate: function(model, data) {
+      return console.log("bulk Update");
+    },
+    patchQueueData: function(model, key, localProp, value) {
       console.log("queueing Data");
       console.log(arguments);
-      if (this.timeout != null) {
-        window.clearTimeout(this.timeout);
+      if (this.patchTimeout != null) {
+        window.clearTimeout(this.patchTimeout);
       }
-      if (this.queue[key] == null) {
-        this.queue[key] = {};
+      if (this.patchQueue[key] == null) {
+        this.patchQueue[key] = {};
       }
-      this.queue[key][localProp] = value;
-      return this.timeout = window.setTimeout((function(_this) {
+      this.patchQueue[key][localProp] = value;
+      return this.patchTimeout = window.setTimeout((function(_this) {
         return function() {
           var data, ref, results, xhrs;
           xhrs = [];
-          ref = _this.queue;
+          ref = _this.patchQueue;
           results = [];
           for (key in ref) {
             data = ref[key];
             results.push(_this.xhr({
               method: "PATCH",
               url: "http://" + _this.urlRoot + "/" + model + "/" + (_this.getIdByPolymerKey(model, key)),
-              data: _this.queue[key],
+              data: _this.patchQueue[key],
               headers: _this.buildHeader()
             }).then(function(data) {
-              return delete _this.queue[key];
+              return delete _this.patchQueue[key];
             })["catch"](function(error) {
               throw error;
             }));
@@ -313,6 +394,7 @@
       })(this), "1000");
     },
     xhr: function(settings) {
+      console.log("xhr");
       if (settings.headers == null) {
         settings.headers = {};
       }
@@ -330,7 +412,7 @@
     }
   };
 
-  Polymer(_$.deepSafeExtend(loopbackDataModel, {
+  constructor = Polymer(_$.deepSafeExtend(loopbackDataModel, {
     properties: {
       tracks: {
         notify: true,
@@ -372,6 +454,115 @@
         return false;
       }
       return true;
+    },
+    syncWithService: function() {
+      var syncedData, t0;
+      console.log("starting sync");
+      t0 = performance.now();
+      syncedData = new constructor();
+      syncedData.tracks = this.tracks;
+      syncedData.tags = this.tags;
+      app.status = "syncWithService";
+      return app.portal.sendMessage({
+        target: "google_music",
+        fn: "getTracks"
+      }).then((function(_this) {
+        return function(serviceTracks) {
+          return _$.allForPromise(serviceTracks.tracks, function(track, key) {
+            return syncedData.findOrCreate("track", {
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              playCount: track.playCount,
+              rating: track.rating,
+              googleId: track.googleId,
+              albumArtLink: track.albumArtLink
+            });
+          });
+        };
+      })(this)).then((function(_this) {
+        return function() {
+          var playlists;
+          return playlists = app.portal.sendMessage({
+            target: "background",
+            fn: "allPlaylists"
+          });
+        };
+      })(this)).then((function(_this) {
+        return function(servicePlaylists) {
+          return _$.allForPromise(servicePlaylists.playlists, function(playlist, key) {
+            var tag, tracks;
+            tag = syncedData.findOrCreate("tag", {
+              name: playlist.name
+            });
+            tracks = app.portal.sendMessage({
+              target: "background",
+              fn: "playlist",
+              args: {
+                id: playlist.id
+              }
+            });
+            return Promise.all([tag, tracks]).then(function(data) {
+              var trackIds;
+              tag = data[0];
+              tracks = data[1];
+              trackIds = [];
+              return _$.allForPromise(tracks, function(track, key) {
+                return syncedData.findOrCreate("track", {
+                  title: track.title,
+                  artist: track.artist,
+                  album: track.album,
+                  playCount: track.playCount,
+                  rating: track.rating,
+                  googleId: track.googleId,
+                  albumArtLink: track.albumArtLink
+                }).then(function(track) {
+                  var entry, linked, ref, ref1;
+                  linked = false;
+                  ref = track.tags;
+                  for (key in ref) {
+                    entry = ref[key];
+                    if (_$.intEqual(entry.id, track.id)) {
+                      linked = true;
+                    }
+                  }
+                  ref1 = tag.tracks;
+                  for (key in ref1) {
+                    entry = ref1[key];
+                    if (_$.intEqual(entry.id, tag.id)) {
+                      linked = true;
+                    }
+                  }
+                  if (!linked) {
+                    _this.push("tracks." + (_this.getIndexById("track", track.id)) + ".tags", tag);
+                    _this.push("tags." + (_this.getIndexById("tag", tag.id)) + ".tracks", track);
+                    trackIds.push(track.id);
+                  }
+                });
+              }).then(function() {
+                return _this.xhr({
+                  method: "POST",
+                  url: "http://localhost:3000/api/tags/" + tag.id + "/tracks/linkById",
+                  headers: _this.buildHeader(),
+                  data: {
+                    tracks: trackIds
+                  }
+                });
+              });
+            })["catch"](function(e) {
+              return app.fail(e);
+            });
+          });
+        };
+      })(this)).then((function(_this) {
+        return function() {
+          console.log("complete");
+          _this.set("tracks", syncedData.tracks);
+          _this.set("tags", syncedData.tags);
+          console.log("set done");
+          return console.log(performance.now() - t0);
+        };
+      })(this));
     },
     is: "jamlist-data"
   }));

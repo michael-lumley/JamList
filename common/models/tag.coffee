@@ -5,6 +5,13 @@ module.exports = (Tag) ->
 		_ = require('underscore')
 		###
 
+		Tag.prototype.addTracks = (tracks, cb)->
+			for trackId in tracks
+				track = Tag.app.models.Track.findById(trackId, (err, track)=>
+					@tracks.add(track)
+				)
+			cb(null)
+
 		Tag.merge = (baseId, mergeId, name, cb)->
 				console.log("merge call")
 				base = app.wrapper("Tag", "findById", [baseId])
@@ -48,7 +55,14 @@ module.exports = (Tag) ->
 						)
 				)
 
-
+		Tag.remoteMethod("addTracks",
+			isStatic: false
+			accepts: [
+				{arg: 'tracks', type: 'array', required: true}
+			]
+			http: {path: '/tracks/linkById', verb: 'post'}
+			returns: {root: true}
+		)
 
 		Tag.remoteMethod("merge",
 				accepts: [

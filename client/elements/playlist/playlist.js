@@ -135,32 +135,39 @@
     },
     filterTracks: function(rules) {
       var ent, group, i, j, k, l, len, len1, len2, len3, passingTracks, ref, ref1, remaining, results, rule, selected, track;
+      console.log("filtering tracks");
       selected = this.$.selector.selected.slice(0);
       for (i = 0, len = selected.length; i < len; i++) {
         track = selected[i];
         this.$.selector.deselect(track);
       }
       remaining = this.tracks;
-      ref = this.formattedRules;
-      for (j = 0, len1 = ref.length; j < len1; j++) {
-        group = ref[j];
-        passingTracks = [];
-        ref1 = group.rules;
-        for (k = 0, len2 = ref1.length; k < len2; k++) {
-          rule = ref1[k];
-          if (this.filters[rule.ruleType] != null) {
-            ent = this.filters[rule.ruleType](remaining, rule);
-            passingTracks = passingTracks.concat(ent);
+      console.log("all tracks removed");
+      console.log(this.formattedRules);
+      if (this.formattedRules.length > 0) {
+        ref = this.formattedRules;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          group = ref[j];
+          passingTracks = [];
+          ref1 = group.rules;
+          for (k = 0, len2 = ref1.length; k < len2; k++) {
+            rule = ref1[k];
+            if (this.filters[rule.ruleType] != null) {
+              console.log("testing rule");
+              ent = this.filters[rule.ruleType](remaining, rule);
+              passingTracks = passingTracks.concat(ent);
+            }
           }
+          remaining = _.uniq(passingTracks);
         }
-        remaining = _.uniq(passingTracks);
+        results = [];
+        for (l = 0, len3 = remaining.length; l < len3; l++) {
+          track = remaining[l];
+          console.log(track);
+          results.push(this.$.selector.select(track));
+        }
+        return results;
       }
-      results = [];
-      for (l = 0, len3 = remaining.length; l < len3; l++) {
-        track = remaining[l];
-        results.push(this.$.selector.select(track));
-      }
-      return results;
     },
     filters: {
       rated: function(libraryEntries, rule) {

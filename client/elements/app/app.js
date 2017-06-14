@@ -81,6 +81,7 @@
     ready: function() {
       window.app = this;
       this.data = this.$.data;
+      this.data.load();
       window.addEventListener('hashchange', (function(_this) {
         return function(hash) {
           return _this.path = location.hash.substring(2);
@@ -141,120 +142,14 @@
       return window.location.hash = "#/" + path;
     },
     syncWithService: function(syncPlaylists) {
-      var ops;
       if (syncPlaylists == null) {
         syncPlaylists = false;
       }
-      console.log("starting sync");
-      ops = [];
-      this.status = "syncWithService";
-      return new Promise((function(_this) {
-        return function(resolve, reject) {
-          var playlists, tracks;
-          tracks = _this.portal.sendMessage({
-            target: "google_music",
-            fn: "getTracks"
-          });
-          playlists = _this.portal.sendMessage({
-            target: "background",
-            fn: "allPlaylists"
-          });
-          return Promise.all([tracks, playlists]).then(function(data) {
-            var servicePlaylists, serviceTracks;
-            console.log(data);
-            serviceTracks = data[0].tracks;
-            servicePlaylists = data[1].playlists;
-
-            /*
-            				for track, key in serviceTracks
-            					do (track)=>
-            						if key < 3
-            							console.log track
-             */
-            return _$.forPromise(servicePlaylists, function(playlist, key) {
-              return new Promise(function(resolve, reject) {
-                if (key < 999) {
-                  return (function(playlist) {
-                    var tag;
-                    tag = _this.data.findOrCreate("tag", {
-                      name: playlist.name
-                    });
-                    tracks = _this.portal.sendMessage({
-                      target: "background",
-                      fn: "playlist",
-                      args: {
-                        id: playlist.id
-                      }
-                    });
-                    return Promise.all([tag, tracks]).then(function(data) {
-                      tag = data[0];
-                      tracks = data[1];
-                      return _$.allForPromise(tracks, function(track, key) {
-                        return _this.data.findOrCreate("track", {
-                          title: track.title,
-                          artist: track.artist,
-                          album: track.album,
-                          millisduration: track.millisduration
-                        }).then(function(track) {
-                          return _this.data.link({
-                            model: "tag",
-                            id: tag.id
-                          }, {
-                            model: "track",
-                            id: track.id
-                          });
-                        });
-                      }).then(function() {
-                        return resolve();
-                      });
-                    })["catch"](function(error) {
-                      _this.fail(error);
-                      return resolve();
-                    });
-                  })(playlist);
-                }
-              });
-            });
-          }).then(function(data) {
-            app.status = "active";
-            return resolve();
-          });
+      return data.syncWithService().then((function(_this) {
+        return function(data) {
+          return console.log("sync complete");
         };
       })(this));
-    },
-    loadJamListData: function() {
-
-      /*
-      		return new Promise((resolve, reject)=>
-      			tracks = @xhr(
-      				method: "GET"
-      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tracks"
-      				data:
-      					filter:
-      						include:
-      							relation: 'tags'
-      			)
-      			playlists = @xhr(
-      				method: "GET"
-      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/playlists"
-      				data:
-      					filter:
-      						include:
-      							relation: 'rules'
-      			)
-      			tags = @xhr(
-      				method: "GET"
-      				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tags"
-      			)
-      			Promise.all([tracks, playlists, tags]).then((data)=>
-      				console.log data
-      				@tracks = data[0]
-      				@playlists = data[1]
-      				@tags = data[2]
-      				resolve()
-      			)
-      		)
-       */
     },
     getData: function(type, id) {
       id = Number(id);

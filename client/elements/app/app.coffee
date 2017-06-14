@@ -64,6 +64,7 @@ window.elements.app = Polymer(
 		# Bind to the window and to the data element
 		window.app = @
 		@data = @$.data
+		@data.load()
 
 		#Bind path to url hash (in combo with pathChagne Observer)
 		window.addEventListener('hashchange', (hash)=>
@@ -125,105 +126,9 @@ window.elements.app = Polymer(
 
 	#@fold
 	syncWithService: (syncPlaylists = false)->
-		console.log "starting sync"
-		ops = [] #an array for all async operations needed to complete sync. When done, resolve promise
-		@status = "syncWithService"
-		return new Promise((resolve, reject)=>
-			tracks = @portal.sendMessage({
-				target: "google_music"
-				fn: "getTracks"
-			})
-			playlists = @portal.sendMessage({
-				target: "background"
-				fn: "allPlaylists"
-			})
-
-			Promise.all([tracks, playlists]).then((data)=>
-				console.log data
-				serviceTracks = data[0].tracks
-				servicePlaylists = data[1].playlists
-				###
-				for track, key in serviceTracks
-					do (track)=>
-						if key < 3
-							console.log track
-				###
-				_$.forPromise(servicePlaylists, (playlist, key)=>
-					return new Promise((resolve, reject)=>
-						if key < 999
-							do (playlist)=>
-								tag = @data.findOrCreate("tag", {name: playlist.name})
-								tracks = @portal.sendMessage({
-									target: "background"
-									fn: "playlist"
-									args:
-										id: playlist.id
-								})
-								Promise.all([tag, tracks]).then((data)=>
-									tag = data[0]
-									tracks = data[1]
-									_$.allForPromise(tracks, (track, key)=>
-										@data.findOrCreate("track", {
-											title: track.title,
-											artist: track.artist,
-											album: track.album,
-											millisduration: track.millisduration
-										}).then((track)=>
-											@data.link({
-												model: "tag"
-												id: tag.id
-											},{
-												model: "track"
-												id: track.id
-											})
-										)
-									).then(()=>
-										resolve()
-									)
-								).catch((error)=>
-									@fail(error)
-									resolve()
-								)
-					)
-				)
-			).then((data)=>
-				app.status = "active"
-				resolve()
-			)
+		data.syncWithService().then((data)=>
+			console.log "sync complete"
 		)
-	loadJamListData: ()->
-		#TODO user authentication
-		###
-		return new Promise((resolve, reject)=>
-			tracks = @xhr(
-				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tracks"
-				data:
-					filter:
-						include:
-							relation: 'tags'
-			)
-			playlists = @xhr(
-				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/playlists"
-				data:
-					filter:
-						include:
-							relation: 'rules'
-			)
-			tags = @xhr(
-				method: "GET"
-				url: "http://localhost:3000/api/jlUsers/#{Cookies.get("user")}/tags"
-			)
-			Promise.all([tracks, playlists, tags]).then((data)=>
-				console.log data
-				@tracks = data[0]
-				@playlists = data[1]
-				@tags = data[2]
-				resolve()
-			)
-		)
-		###
 
 	getData: (type, id)->
 		id = Number(id)
